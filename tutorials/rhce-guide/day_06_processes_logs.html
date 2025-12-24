@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 6：程序與監控 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 沿用標準設計系統 -->
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #334155; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #ef4444; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #ef4444; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e5e5e5; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #ef4444; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fca5a5; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f1f5f9; text-align: left; padding: 1rem; border-bottom: 2px solid #cbd5e1; font-weight: 700; color: #1e293b; }
+        td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #f97316; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 1: RH124 基礎篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> 程序 (Process) 概念</a>
+            <a href="#ps" class="nav-item"><span class="nav-icon">02</span> 靜態監控 (ps)</a>
+            <a href="#top" class="nav-item"><span class="nav-icon">03</span> 動態監控 (top)</a>
+            <a href="#kill" class="nav-item"><span class="nav-icon">04</span> 終止程序 (kill)</a>
+            <a href="#logs" class="nav-item"><span class="nav-icon">05</span> 日誌分析 (Logs)</a>
+            <a href="#lab" class="nav-item" style="color:#fca5a5;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 06</span>
+                <span class="text-slate-400 font-mono text-sm">RH124 Unit 8, 11</span>
+            </div>
+            <h1>系統的脈搏：行程管理與監控</h1>
+            <p class="text-xl text-slate-500 max-w-3xl leading-relaxed">
+                電腦變慢了？程式當機了關不掉？這時候你就需要當「系統醫生」，學會把脈（監控 Process）和進行急救手術（Kill）。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 什麼是 Process？</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">👨‍🍳 餐廳訂單的比喻</h4>
+                <p class="text-slate-700">
+                    <strong>程式 (Program)</strong>：就像「食譜」。它是硬碟裡死板板的檔案（例如 <code>/usr/bin/vim</code>）。<br>
+                    <strong>程序 (Process)</strong>：就像「正在做的料理」。當你執行程式，CPU 開始運算，它就變成了 Process。每個 Process 都有一個獨一無二的編號，叫做 <strong>PID (Process ID)</strong>，就像訂單編號。
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. ps -->
+        <section id="ps">
+            <h2><span class="section-num">2</span> 靜態監控：ps (Process Status)</h2>
+            <p class="mb-4 text-slate-600">這是拍快照。它只顯示「執行指令當下」的狀態。</p>
+            
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">ps aux</span>
+<span class="cmd-comment"># a: 顯示所有使用者的程序</span>
+<span class="cmd-comment"># u: 顯示使用者的詳細資訊 (CPU%, MEM%)</span>
+<span class="cmd-comment"># x: 顯示沒有控制終端機的程序 (背景服務)</span>
+            </div>
+
+            <p class="mt-4 font-bold text-slate-700">或者你也可以用 Red Hat 推薦的格式：</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">ps -ef</span>
+<span class="cmd-comment"># -e: Every process (所有程序)</span>
+<span class="cmd-comment"># -f: Full format (完整格式，包含 PPID 父程序 ID)</span>
+            </div>
+        </section>
+
+        <!-- 3. top -->
+        <section id="top">
+            <h2><span class="section-num">3</span> 動態監控：top</h2>
+            <p class="mb-4 text-slate-600">這是直播。畫面會每 3 秒更新一次，讓你知道現在誰佔用了 CPU。</p>
+            
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">top</span>
+            </div>
+
+            <h4 class="font-bold mt-4">Top 裡的快捷鍵 (進去後按)：</h4>
+            <ul class="list-disc list-inside space-y-2 text-slate-700 ml-4">
+                <li><code>P</code>：按 CPU 使用率排序 (預設)。</li>
+                <li><code>M</code>：按 Memory 使用率排序 (抓出吃記憶體的怪獸)。</li>
+                <li><code>k</code>：輸入 PID 來砍掉某個程序。</li>
+                <li><code>q</code>：離開。</li>
+            </ul>
+        </section>
+
+        <!-- 4. kill -->
+        <section id="kill">
+            <h2><span class="section-num">4</span> 終止程序：kill</h2>
+            <p class="mb-4 text-slate-600">當程式當機時，我們需要發送「信號 (Signal)」給它。</p>
+
+            <table>
+                <tr>
+                    <th class="w-1/4">信號代碼</th>
+                    <th>名稱</th>
+                    <th>意義</th>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">15</td>
+                    <td>SIGTERM</td>
+                    <td><strong>溫柔勸退 (預設)</strong>。請程式自己收拾好東西（存檔）然後關閉。</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-red-600">9</td>
+                    <td>SIGKILL</td>
+                    <td><strong>強制獵殺</strong>。直接把程式從記憶體移除，不管它有沒有存檔。非必要別用。</td>
+                </tr>
+            </table>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">kill 1234</span>
+<span class="cmd-comment"># 傳送 SIGTERM 給 PID 1234</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">kill -9 1234</span>
+<span class="cmd-comment"># 強制殺死 PID 1234</span>
+            </div>
+        </section>
+
+        <!-- 5. Logs -->
+        <section id="logs">
+            <h2><span class="section-num">5</span> 系統日記：Logs</h2>
+            <p class="mb-4 text-slate-600">系統發生什麼事都會寫在日記裡。RHEL 有兩個主要看日誌的地方。</p>
+
+            <h3 class="text-lg font-bold mt-4">1. 傳統日誌檔 (/var/log)</h3>
+            <ul class="list-disc list-inside ml-4 text-slate-700">
+                <li><code>/var/log/messages</code>：大部分系統訊息。</li>
+                <li><code>/var/log/secure</code>：安全性相關（誰登入失敗、誰用了 sudo）。</li>
+            </ul>
+
+            <h3 class="text-lg font-bold mt-4">2. 新式日誌系統：journalctl</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">journalctl -n 5</span>
+<span class="cmd-comment"># 看最新的 5 條日誌</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">journalctl -p err</span>
+<span class="cmd-comment"># 只看「錯誤 (Error)」等級以上的嚴重訊息</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">journalctl -f</span>
+<span class="cmd-comment"># Follow (追蹤)：像直播一樣，有新日誌會馬上跳出來 (按 Ctrl+C 離開)</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-red-500 mt-12">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-none mt-0">🧪 今日實戰 Lab：獵殺睡美人</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-slate-700">
+                    <li class="pl-2">
+                        <strong>製造背景程序：</strong>
+                        <br>執行一個會睡覺 1000 秒的指令，並丟到背景執行 (&)。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">sleep 1000 &</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>找出 PID：</strong>
+                        <br>使用 <code>ps</code> 找出剛剛那個 sleep 指令的 PID。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">ps aux | grep sleep</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>執行獵殺：</strong>
+                        <br>使用 <code>kill</code> 指令終止該 PID。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">kill [PID]</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>調查日誌：</strong>
+                        <br>查看最近誰使用了 sudo 指令。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">journalctl /usr/bin/sudo</code>
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

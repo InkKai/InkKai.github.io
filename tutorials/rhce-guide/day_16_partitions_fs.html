@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 16：分區與檔案系統 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffbeb; color: #451a03; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #1e1e1e; color: #d4d4d4; overflow-y: auto; z-index: 50; border-right: 1px solid #451a03; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #451a03; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #fcd34d; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #a3a3a3; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #292524; color: #fcd34d; border-left-color: #f59e0b; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #78350f; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #92400e; border-bottom: 2px solid #fde68a; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #fbbf24; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #f59e0b; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fcd34d; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #fcd34d; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #fff7ed; text-align: left; padding: 1rem; border-bottom: 2px solid #fcd34d; font-weight: 700; color: #92400e; }
+        td { padding: 1rem; border-bottom: 1px solid #fde68a; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #ea580c; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 2: RH134 進階篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> 硬碟四部曲</a>
+            <a href="#part" class="nav-item"><span class="nav-icon">02</span> 切蛋糕 (fdisk)</a>
+            <a href="#format" class="nav-item"><span class="nav-icon">03</span> 抹奶油 (mkfs)</a>
+            <a href="#mount" class="nav-item"><span class="nav-icon">04</span> 端上桌 (mount)</a>
+            <a href="#fstab" class="nav-item"><span class="nav-icon">05</span> 永久掛載 (fstab)</a>
+            <a href="#lab" class="nav-item" style="color:#fcd34d;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold tracking-widest">DAY 16</span>
+                <span class="text-amber-700 font-mono text-sm">RH134 Unit 6</span>
+            </div>
+            <h1>硬碟蛋糕切法 I：分區與檔案系統</h1>
+            <p class="text-xl text-amber-900 max-w-3xl leading-relaxed">
+                買了一顆新硬碟插上去就能用嗎？當然不行。你需要經過「分區、格式化、掛載」三個步驟。這就像買回來一塊大蛋糕，你得先切塊，塗上奶油，最後放到盤子上才能吃。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 儲存管理四部曲</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🍰 蛋糕師傅的比喻</h4>
+                <ol class="list-decimal list-inside space-y-2 text-slate-700">
+                    <li><strong>識別 (Identify)</strong>：確認買回來的蛋糕（硬碟）叫什麼名字？(e.g., <code>/dev/vdb</code>)</li>
+                    <li><strong>分區 (Partition)</strong>：把蛋糕切成小塊。使用 <code>fdisk</code> (傳統切法) 或 <code>gdisk</code> (新式切法)。</li>
+                    <li><strong>格式化 (Format)</strong>：在切好的蛋糕上抹奶油、打格子，讓它變成可以寫字的狀態 (File System)。常用格式：<code>xfs</code>, <code>ext4</code>。</li>
+                    <li><strong>掛載 (Mount)</strong>：把蛋糕放到桌子的某個盤子 (目錄) 上，這樣大家才拿得到。</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- 2. Partition -->
+        <section id="part">
+            <h2><span class="section-num">2</span> 步驟一：切蛋糕 (fdisk/parted)</h2>
+            <p class="mb-4 text-amber-900">首先，用 <code>lsblk</code> 看看你的硬碟在哪。</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">lsblk</span>
+<span class="cmd-output">NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT</span>
+<span class="cmd-output">vdb    252:16   0  10G  0 disk </span>
+<span class="cmd-comment"># 看到 vdb 了，它是一顆 10G 的硬碟，還沒被切過。</span>
+            </div>
+
+            <p class="mt-4 font-bold text-amber-900">開始切分區：</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">parted /dev/vdb mklabel gpt</span>
+<span class="cmd-comment"># 建立分區表 (GPT 是現代標準，MBR 是舊的)。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">parted /dev/vdb mkpart primary xfs 2048s 1000MB</span>
+<span class="cmd-comment"># 切一個 1GB 的分區。</span>
+<span class="cmd-comment"># 或者使用互動式的 'gdisk /dev/vdb' (推薦新手練習 gdisk，介面跟 fdisk 很像)。</span>
+            </div>
+            
+            <div class="bg-yellow-100 p-4 rounded mt-4">
+                <p class="font-bold text-yellow-800">💡 udevadm settle</p>
+                <p class="text-sm text-yellow-900">
+                    切完分區後，系統核心有時候還沒反應過來。執行 <code>udevadm settle</code> 可以強制系統重新掃描裝置，確保 <code>/dev/vdb1</code> 出現。
+                </p>
+            </div>
+        </section>
+
+        <!-- 3. Format -->
+        <section id="format">
+            <h2><span class="section-num">3</span> 步驟二：抹奶油 (mkfs)</h2>
+            <p class="mb-4 text-amber-900">分區切好了，現在要建立檔案系統 (File System)。Red Hat 預設使用 <strong>XFS</strong>。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">mkfs.xfs /dev/vdb1</span>
+<span class="cmd-comment"># 將第一個分區格式化為 XFS。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">mkfs.ext4 /dev/vdb1</span>
+<span class="cmd-comment"># 如果你想用 ext4 也可以，但 RHEL 推薦 XFS。</span>
+            </div>
+        </section>
+
+        <!-- 4. Mount -->
+        <section id="mount">
+            <h2><span class="section-num">4</span> 步驟三：端上桌 (mount)</h2>
+            <p class="mb-4 text-amber-900">Linux 的硬碟不是 C: D: 槽，而是掛載在某個「目錄」底下。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">mkdir /data</span>
+<span class="cmd-comment"># 1. 準備盤子 (建立掛載點目錄)。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">mount /dev/vdb1 /data</span>
+<span class="cmd-comment"># 2. 把蛋糕放到盤子上。現在你存進 /data 的東西，實際是存到 vdb1 硬碟裡。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">df -h</span>
+<span class="cmd-comment"># 檢查掛載情形 (Disk Free)。</span>
+            </div>
+        </section>
+
+        <!-- 5. fstab -->
+        <section id="fstab">
+            <h2><span class="section-num">5</span> 步驟四：永久掛載 (/etc/fstab)</h2>
+            <div class="alert-box">
+                <p class="font-bold text-red-800">🔥 考試地雷</p>
+                <p class="text-slate-700">
+                    用 <code>mount</code> 指令掛載只是暫時的！重開機後就會不見。
+                    你必須寫入 <code>/etc/fstab</code> 設定檔，硬碟才會在開機時自動掛載。
+                    <strong>寫錯 fstab 會導致無法開機！請務必小心。</strong>
+                </p>
+            </div>
+
+            <p class="mb-2 text-amber-900">使用 <strong>UUID</strong> (身分證字號) 來掛載最安全，因為裝置名稱 (vdb) 可能會變。</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">blkid /dev/vdb1</span>
+<span class="cmd-output">/dev/vdb1: UUID="1234-5678-abcd..." TYPE="xfs"</span>
+<span class="cmd-comment"># 複製這個 UUID。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">vim /etc/fstab</span>
+<span class="cmd-comment"># 新增一行：</span>
+<span class="cmd-input">UUID=1234-5678...  /data  xfs  defaults  0 0</span>
+            </div>
+
+            <p class="mt-4 font-bold text-amber-900">驗證 fstab (保命招式)：</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">mount -a</span>
+<span class="cmd-comment"># 嘗試掛載 fstab 裡的所有東西。如果沒報錯，代表你寫對了。</span>
+<span class="cmd-comment"># 如果報錯，千萬不要重開機，快回去修 fstab！</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-yellow-500 mt-12">
+                <h2 class="text-2xl font-bold text-amber-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：新增資料碟</h2>
+                <p class="text-slate-600 mb-4">假設你的虛擬機有一顆閒置硬碟 <code>/dev/vdb</code> (如果沒有，請在虛擬機設定裡加一顆)。</p>
+                
+                <ol class="list-decimal list-inside space-y-4 text-amber-800">
+                    <li class="pl-2">
+                        <strong>分區：</strong>
+                        <br>建立一個 500MB 的分區 <code>/dev/vdb1</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">parted /dev/vdb mklabel gpt mkpart primary xfs 2048s 500MB</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>格式化：</strong>
+                        <br>格式化為 XFS。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">udevadm settle; mkfs.xfs /dev/vdb1</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>永久掛載：</strong>
+                        <br>建立 <code>/newstorage</code> 目錄，並設定開機自動掛載。
+                        <br>1. <code>mkdir /newstorage</code>
+                        <br>2. <code>blkid</code> 取得 UUID。
+                        <br>3. 編輯 <code>/etc/fstab</code>。
+                        <br>4. <code>mount -a</code> 測試。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 23：變數與 Facts | RHCE 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; color: #0c4a6e; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #0ea5e9; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #38bdf8; border-left-color: #0ea5e9; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0c4a6e; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #0369a1; border-bottom: 2px solid #bae6fd; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #0ea5e9; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e0f2fe; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #0ea5e9; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #38bdf8; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #7dd3fc; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f0f9ff; text-align: left; padding: 1rem; border-bottom: 2px solid #7dd3fc; font-weight: 700; color: #0369a1; }
+        td { padding: 1rem; border-bottom: 1px solid #bae6fd; vertical-align: top; }
+        .analogy-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0ea5e9; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCE 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 3: RH294 自動化</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> 變數概念</a>
+            <a href="#define" class="nav-item"><span class="nav-icon">02</span> 定義變數</a>
+            <a href="#facts" class="nav-item"><span class="nav-icon">03</span> Facts 身家調查</a>
+            <a href="#vault" class="nav-item"><span class="nav-icon">04</span> 機密保護 (Vault)</a>
+            <a href="#lab" class="nav-item" style="color:#38bdf8;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 23</span>
+                <span class="text-blue-800 font-mono text-sm">RH294 Unit 4</span>
+            </div>
+            <h1>變數的魔力：Variables 與 Facts</h1>
+            <p class="text-xl text-sky-900 max-w-3xl leading-relaxed">
+                如果 Playbook 是劇本，變數就是「填空題」。透過變數，我們可以寫一份劇本，然後應用在一百種不同的環境，讓自動化真正變得靈活。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 為什麼需要變數？</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-sky-700 text-lg mb-2">📝 表單的比喻</h4>
+                <p class="text-slate-700">
+                    想像你要寫信給 100 個人。你不會手寫 100 封信。
+                    你會寫一封「範本」：<br>
+                    <code>親愛的 {{ name }}，祝你 {{ event }} 快樂！</code><br>
+                    然後準備一份名單（變數檔）。Ansible 執行時，會自動把 {{ name }} 換成真正的人名。
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. Define -->
+        <section id="define">
+            <h2><span class="section-num">2</span> 定義與使用變數</h2>
+            <p class="mb-4 text-slate-600">使用 <code>{{ variable_name }}</code> 來引用變數。</p>
+
+            <div class="cmd-block text-sm">
+<span class="cmd-input">---</span>
+<span class="cmd-input">- name: Install Package</span>
+<span class="cmd-input">  hosts: all</span>
+<span class="cmd-input">  vars:</span>
+<span class="cmd-input">    web_pkg: httpd</span> <span class="cmd-comment"># 定義變數</span>
+<span class="cmd-input">  tasks:</span>
+<span class="cmd-input">    - name: Install the package</span>
+<span class="cmd-input">      ansible.builtin.dnf:</span>
+<span class="cmd-input">        name: "{{ web_pkg }}"</span> <span class="cmd-comment"># 使用變數 (注意要加引號！)</span>
+<span class="cmd-input">        state: present</span>
+            </div>
+
+            <div class="alert-box">
+                <p class="font-bold text-red-800">🔥 考試地雷</p>
+                <p class="text-slate-700">如果變數是該行的<strong>第一個字</strong>，一定要用雙引號 <code>"{{ var }}"</code> 包起來，不然 YAML 解析器會報錯。</p>
+            </div>
+        </section>
+
+        <!-- 3. Facts -->
+        <section id="facts">
+            <h2><span class="section-num">3</span> 自動變數：Ansible Facts</h2>
+            <p class="mb-4 text-slate-600">
+                每次 Playbook 執行時，第一步通常是 <code>Gathering Facts</code>。這時候 Ansible 會去受控端做「身家調查」，收集 IP、OS 版本、CPU 數量等資訊。
+            </p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible localhost -m setup</span>
+<span class="cmd-comment"># 查看收集到的所有 Facts (內容超多)。</span>
+            </div>
+
+            <p class="mt-4 font-bold text-sky-800">常用 Magic Variables：</p>
+            <ul class="list-disc list-inside text-slate-700">
+                <li><code>ansible_hostname</code>: 主機名稱 (短)</li>
+                <li><code>ansible_default_ipv4.address</code>: IP 位址</li>
+                <li><code>ansible_distribution</code>: OS 發行版 (e.g. RedHat)</li>
+            </ul>
+        </section>
+
+        <!-- 4. Vault -->
+        <section id="vault">
+            <h2><span class="section-num">4</span> 機密保護：Ansible Vault</h2>
+            <p class="mb-4 text-slate-600">密碼、金鑰不能明文寫在 Playbook 裡！用 Vault 加密。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible-vault create secret.yml</span>
+<span class="cmd-comment"># 建立加密檔案 (會叫你設密碼)。</span>
+
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible-vault view secret.yml</span>
+<span class="cmd-comment"># 查看內容 (需要輸入密碼)。</span>
+
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible-playbook site.yml --ask-vault-pass</span>
+<span class="cmd-comment"># 執行時，告訴 Ansible 這裡面有加密檔案，請來問我密碼。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-sky-500 mt-12">
+                <h2 class="text-2xl font-bold text-sky-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：動態網頁</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-sky-800">
+                    <li class="pl-2">
+                        <strong>建立變數檔：</strong>
+                        <br>建立 <code>vars.yml</code>，定義 <code>web_content: "Hello from Ansible"</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>撰寫 Playbook：</strong>
+                        <br>建立 <code>web_setup.yml</code>。
+                        <br>1. 引入 <code>vars_files: ["vars.yml"]</code>。
+                        <br>2. 安裝 httpd。
+                        <br>3. 使用 <code>copy</code> 模組，將 <code>content: "{{ web_content }} running on {{ ansible_hostname }}"</code> 寫入 <code>/var/www/html/index.html</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>執行與驗證：</strong>
+                        <br>執行劇本。
+                        <br>用 <code>curl</code> 測試，你應該會看到網頁內容包含該主機的名字 (Facts)。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

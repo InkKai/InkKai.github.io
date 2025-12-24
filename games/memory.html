@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>記憶翻牌 - Kai Game Station</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* 遊戲區域設定 */
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr); /* 4欄 */
+            gap: 10px;
+            max-width: 400px; /* 限制總寬度 */
+            margin: 20px auto;
+            perspective: 1000px; /* 3D 視覺深度 */
+        }
+
+        /* 卡片容器 */
+        .card {
+            background-color: transparent;
+            height: 80px; /* 卡片高度 */
+            cursor: pointer;
+            position: relative;
+            transform-style: preserve-3d; /* 保留 3D 空間 */
+            transition: transform 0.5s; /* 翻轉動畫時間 */
+        }
+
+        /* 當卡片被加上 flip 類別時，旋轉 180 度 */
+        .card.flip {
+            transform: rotateY(180deg);
+        }
+
+        /* 已經配對成功的卡片 */
+        .card.matched {
+            transform: rotateY(180deg);
+            opacity: 0; /* 隱藏起來，或者改成 0.5 變半透明 */
+            cursor: default;
+            transition: opacity 0.5s 0.5s; /* 稍微延遲後消失 */
+        }
+
+        /* 卡片的正面與背面共用設定 */
+        .front, .back {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            backface-visibility: hidden; /* 背對時隱藏 */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        /* 正面 (圖案面) */
+        .front {
+            background-color: #fff;
+            color: #1a1a2e;
+            transform: rotateY(180deg); /* 預設先轉過去藏起來 */
+        }
+
+        /* 背面 (蓋著的那面) */
+        .back {
+            background-color: #0f3460;
+            border: 2px solid #4cc9f0;
+            color: #4cc9f0;
+            font-size: 2rem;
+        }
+
+        .info-panel {
+            display: flex;
+            justify-content: space-between;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+            font-size: 1.2rem;
+            color: #4cc9f0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧠 記憶大考驗</h1>
+        <p>找出所有相同的圖案配對！</p>
+    </header>
+
+    <div class="game-area">
+        <div class="info-panel">
+            <span>步數: <span id="moves">0</span></span>
+            <span>時間: <span id="timer">0</span>s</span>
+        </div>
+
+        <div class="game-board" id="board"></div>
+
+        <button onclick="initGame()" style="margin-top: 20px;">🔄 重新開始</button>
+    </div>
+
+    <a href="../index.html" class="back-btn">⬅️ 回到遊戲大廳</a>
+
+    <script>
+        const board = document.getElementById('board');
+        const movesEl = document.getElementById('moves');
+        const timeEl = document.getElementById('timer');
+
+        // 這是我們要用的 8 種圖案 (會複製成 16 張)
+        const emojis = ['🍕', '🚀', '🐱', '🌵', '💎', '🎈', '🎸', '🍦'];
+        
+        let cards = []; // 存放所有卡片
+        let flippedCards = []; // 存放目前翻開的卡片 (最多2張)
+        let matchedPairs = 0; // 成功配對幾組
+        let moves = 0;
+        let timer = 0;
+        let gameInterval;
+        let isLocked = false; // 鎖定狀態 (防止一次翻三張)
+
+        // 初始化遊戲
+        function initGame() {
+            board.innerHTML = ''; // 清空盤面
+            moves = 0;
+            matchedPairs = 0;
+            timer = 0;
+            flippedCards = [];
+            isLocked = false;
+            
+            movesEl.innerText = moves;
+            timeEl.innerText = timer;
+            
+            clearInterval(gameInterval);
+            gameInterval = setInterval(() => {
+                timer++;
+                timeEl.innerText = timer;
+            }, 1000);
+
+            // 1. 產生成對的陣列 [...emojis, ...emojis]
+            // 這是一個展開語法，會把 8 個圖案變成 16 個
+            const deck = [...emojis, ...emojis];
+
+            // 2. 洗牌 (Fisher-Yates Shuffle 演算法)
+            deck.sort(() => Math.random() - 0.5);
+
+            // 3. 產生 HTML
+            deck.forEach(emoji => {
+                const card = document.createElement('div');
+                card.classList.add('card');
+                
+                // 每個卡片裡面有正面(圖案)和背面(問號)
+                card.innerHTML = `
+                    <div class="front">${emoji}</div>
+                    <div class="back">❓</div>
+                `;
+
+                // 點擊事件
+                card.addEventListener('click', () => flipCard(card, emoji));
+                
+                board.appendChild(card);
+            });
+        }
+
+        function flipCard(card, emoji) {
+            // 如果鎖定中、或是已經翻開了、或是已經配對成功，就不做動作
+            if (isLocked || card.classList.contains('flip') || card.classList.contains('matched')) return;
+
+            // 翻開這張牌
+            card.classList.add('flip');
+            flippedCards.push({ element: card, value: emoji });
+
+            // 如果翻了兩張，開始檢查
+            if (flippedCards.length === 2) {
+                moves++;
+                movesEl.innerText = moves;
+                checkMatch();
+            }
+        }
+
+        function checkMatch() {
+            isLocked = true; // 鎖住，不讓玩家翻第三張
+
+            const [card1, card2] = flippedCards;
+
+            if (card1.value === card2.value) {
+                // 配對成功！
+                matchedPairs++;
+                // 這裡我們不把陣列清空，而是加上 matched class
+                setTimeout(() => {
+                    card1.element.classList.add('matched');
+                    card2.element.classList.add('matched');
+                    resetTurn();
+                    
+                    // 檢查是否全部完成 (8組)
+                    if (matchedPairs === emojis.length) {
+                        clearInterval(gameInterval);
+                        setTimeout(() => alert(`🎉 恭喜過關！\n花了 ${timer} 秒，移動 ${moves} 步`), 500);
+                    }
+                }, 500);
+            } else {
+                // 配對失敗，蓋回去
+                setTimeout(() => {
+                    card1.element.classList.remove('flip');
+                    card2.element.classList.remove('flip');
+                    resetTurn();
+                }, 1000); // 給玩家看 1 秒鐘
+            }
+        }
+
+        function resetTurn() {
+            flippedCards = [];
+            isLocked = false;
+        }
+
+        // 啟動遊戲
+        initGame();
+    </script>
+</body>
+</html>

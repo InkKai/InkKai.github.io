@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>門口監控 | CloudStay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* 覆蓋掉原本 body 的淺灰背景，改成黑色 */
+        body {
+            background-color: #000; 
+            color: white;
+            flex-direction: column; /* 這裡需要直排 */
+        }
+
+        /* 模擬攝影機畫面 */
+        .camera-feed {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            aspect-ratio: 16/9;
+            background: url('https://images.unsplash.com/photo-1596434464303-a261a86a0149?q=80&w=2070&auto=format&fit=crop'); /* 飯店走廊圖 */
+            background-size: cover;
+            background-position: center;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            margin-bottom: 30px;
+        }
+
+        /* 加上一層濾鏡讓它像監視器 (稍微偏綠+雜訊感) */
+        .camera-filter {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 50, 0, 0.1);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8); /* 四角暗角 */
+            pointer-events: none;
+        }
+
+        /* 錄影中標示 */
+        .rec-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: red;
+            text-shadow: 0 1px 2px black;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background: red;
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        /* 時間戳記 */
+        .timestamp {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-family: 'Courier New', monospace; /* 等寬字體像監視器 */
+            font-size: 1rem;
+            text-shadow: 0 1px 2px black;
+        }
+
+        /* 下方操作按鈕區 */
+        .controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* 按鈕顏色微調 */
+        .btn-mic { background: #34495e; color: white; }
+        .btn-unlock { background: #27ae60; width: 80px; height: 80px; font-size: 2rem; color: white; }
+        .btn-alert { background: #c0392b; color: white; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+
+    </style>
+</head>
+<body class="dark-mode">
+
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+
+    <div class="camera-feed">
+        <div class="camera-filter"></div>
+        
+        <div class="rec-indicator">
+            <div class="dot"></div> REC
+        </div>
+
+        <div class="timestamp" id="timeDisplay">2025-12-20 12:00:00</div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-round btn-mic" onclick="toggleMic()">
+            <i class="fa-solid fa-microphone"></i>
+            <span>通話</span>
+        </button>
+        
+        <button class="btn-round btn-unlock" onclick="quickUnlock()">
+            <i class="fa-solid fa-lock-open"></i>
+        </button>
+        
+        <button class="btn-round btn-alert" onclick="triggerAlarm()">
+            <i class="fa-solid fa-bell"></i>
+            <span>警報</span>
+        </button>
+    </div>
+
+    <script src="js/camera.js"></script>
+
+</body>
+</html>

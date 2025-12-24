@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 4：使用者與群組 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #334155; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #ef4444; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        h3 { font-size: 1.3rem; font-weight: 600; color: #334155; margin-top: 2.5rem; margin-bottom: 1rem; border-left: 4px solid #ef4444; padding-left: 1rem; }
+        
+        .section-num { background-color: #ef4444; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+
+        .cmd-block { background-color: #1e1e1e; color: #e5e5e5; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #ef4444; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fca5a5; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f1f5f9; text-align: left; padding: 1rem; border-bottom: 2px solid #cbd5e1; font-weight: 700; color: #1e293b; }
+        td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #f97316; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 1: RH124 基礎篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#concepts" class="nav-item"><span class="nav-icon">01</span> 使用者與群組概念</a>
+            <a href="#useradd" class="nav-item"><span class="nav-icon">02</span> 管理員工 (User)</a>
+            <a href="#groupadd" class="nav-item"><span class="nav-icon">03</span> 管理部門 (Group)</a>
+            <a href="#sudo" class="nav-item"><span class="nav-icon">04</span> 變身術 (su/sudo)</a>
+            <a href="#password" class="nav-item"><span class="nav-icon">05</span> 密碼管理 (passwd)</a>
+            <a href="#lab" class="nav-item" style="color:#fca5a5;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+        <div class="absolute bottom-0 w-full p-6 border-t border-gray-800 bg-gray-900">
+            <a href="index.html" class="text-gray-400 hover:text-white text-sm"><i class="fas fa-arrow-left mr-2"></i> 回目錄</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 04</span>
+                <span class="text-slate-400 font-mono text-sm">RH124 Unit 6</span>
+            </div>
+            <h1>我是誰？使用者、群組與身份切換</h1>
+            <p class="text-xl text-slate-500 max-w-3xl leading-relaxed">
+                Linux 是一個「多使用者」系統，這意味著同一時間可以有很多人連進來。今天我們要學習如何當「人事部經理」：發識別證（建立帳號）、分部門（群組），以及給予特殊權力（sudo）。
+            </p>
+        </header>
+
+        <!-- 1. Concepts -->
+        <section id="concepts">
+            <h2><span class="section-num">1</span> 核心觀念：識別證與部門</h2>
+            
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🏢 公司的比喻</h4>
+                <p class="text-slate-700">
+                    在 Linux 公司裡，有三種角色：
+                    <ul class="list-disc list-inside mt-2 ml-2">
+                        <li><strong>Root (超級管理員)</strong>：老闆。他有萬能鑰匙，想拆大樓都可以。UID = 0。</li>
+                        <li><strong>User (一般使用者)</strong>：員工。只能在自己的辦公桌 (Home Directory) 活動。UID > 1000。</li>
+                        <li><strong>Group (群組)</strong>：部門。例如「行銷部」的人可以共用某些檔案，但「會計部」的人看不到。</li>
+                    </ul>
+                </p>
+            </div>
+
+            <p class="text-slate-600 mt-4">
+                系統怎麼認得你？不是靠名字，是靠 <strong>UID (User ID)</strong> 和 <strong>GID (Group ID)</strong>。這就像你的員工編號。
+            </p>
+        </section>
+
+        <!-- 2. useradd -->
+        <section id="useradd">
+            <h2><span class="section-num">2</span> 管理員工：useradd / userdel</h2>
+            
+            <p class="mb-4 text-slate-600">這些指令通常只有 Root 能執行（廢話，你見過員工自己發識別證的嗎？）。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@localhost ~]#</span> <span class="cmd-input">useradd tony</span>
+<span class="cmd-comment"># 建立一個叫 tony 的使用者。系統會自動：</span>
+<span class="cmd-comment"># 1. 在 /etc/passwd 新增一行</span>
+<span class="cmd-comment"># 2. 建立 /home/tony 家目錄</span>
+<span class="cmd-comment"># 3. 建立一個同名的 tony 群組</span>
+
+<span class="cmd-prompt">[root@localhost ~]#</span> <span class="cmd-input">userdel -r tony</span>
+<span class="cmd-comment"># 刪除 tony。注意！一定要加 -r，才會連他的家目錄 (/home/tony) 一起刪掉。</span>
+            </div>
+
+            <div class="alert-box">
+                <p class="font-bold text-red-800">重要檔案 (背起來！)</p>
+                <ul class="list-disc list-inside text-slate-700 mt-2">
+                    <li><code>/etc/passwd</code>：使用者清單 (包含 UID, GID, 家目錄位置)。</li>
+                    <li><code>/etc/shadow</code>：密碼檔 (加密過的，只有 Root 能看)。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 3. groupadd -->
+        <section id="groupadd">
+            <h2><span class="section-num">3</span> 管理部門：groupadd / usermod</h2>
+            
+            <p class="mb-4 text-slate-600">一個人可以屬於多個部門（群組）。一個是<strong>主要群組 (Primary Group)</strong>，其他是<strong>附加群組 (Secondary Group)</strong>。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@localhost ~]#</span> <span class="cmd-input">groupadd marketing</span>
+<span class="cmd-comment"># 建立一個叫 marketing 的群組。</span>
+
+<span class="cmd-prompt">[root@localhost ~]#</span> <span class="cmd-input">usermod -aG marketing tony</span>
+<span class="cmd-comment"># 將 tony 加入 marketing 群組。</span>
+<span class="cmd-comment"># -a (Append): 附加，不覆蓋原本的群組。</span>
+<span class="cmd-comment"># -G (Group): 指定附加群組。</span>
+            </div>
+        </section>
+
+        <!-- 4. sudo -->
+        <section id="sudo">
+            <h2><span class="section-num">4</span> 變身術：su 與 sudo</h2>
+            
+            <div class="grid grid-cols-2 gap-6">
+                <div class="bg-blue-50 p-4 rounded border border-blue-200">
+                    <h4 class="font-bold text-blue-800 mb-2">su (Switch User)</h4>
+                    <p class="text-sm text-slate-600">
+                        <strong>完全切換身分。</strong>
+                        <br><code>su -</code> ：切換成 Root，並載入 Root 的環境變數（推薦）。
+                        <br>需要輸入<strong>目標使用者的密碼</strong>（例如 Root 的密碼）。
+                    </p>
+                </div>
+                <div class="bg-green-50 p-4 rounded border border-green-200">
+                    <h4 class="font-bold text-green-800 mb-2">sudo (SuperUser Do)</h4>
+                    <p class="text-sm text-slate-600">
+                        <strong>借用權力。</strong>
+                        <br><code>sudo command</code>：用管理員權限執行這一行指令。
+                        <br>需要輸入<strong>自己的密碼</strong>。
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. passwd -->
+        <section id="password">
+            <h2><span class="section-num">5</span> 密碼管理：passwd</h2>
+            <p class="mb-4 text-slate-600">只有 Root 可以改別人的密碼，一般人只能改自己的。</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@localhost ~]#</span> <span class="cmd-input">passwd tony</span>
+<span class="cmd-comment"># 強制修改 tony 的密碼 (不需要知道舊密碼)。</span>
+
+<span class="cmd-prompt">[student@localhost ~]$</span> <span class="cmd-input">passwd</span>
+<span class="cmd-comment"># 修改自己的密碼 (需要輸入舊密碼)。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-red-500 mt-12">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-none mt-0">🧪 今日實戰 Lab：人事部的一天</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-slate-700">
+                    <li class="pl-2">
+                        <strong>建立部門：</strong>
+                        <br>切換成 Root (<code>sudo -i</code>)，建立兩個群組：<code>devops</code> 和 <code>design</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>招募員工：</strong>
+                        <br>建立使用者 <code>alex</code>，並指定他的附加群組為 <code>devops</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">useradd -G devops alex</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>設定密碼：</strong>
+                        <br>幫 <code>alex</code> 設定密碼為 <code>password123</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">echo "password123" | passwd --stdin alex</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>驗收成果：</strong>
+                        <br>檢查 <code>id alex</code>，確認他的 UID, GID 和群組是否正確。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">id alex</code>
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

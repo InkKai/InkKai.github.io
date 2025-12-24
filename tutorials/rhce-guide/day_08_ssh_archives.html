@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 8：SSH 與備份 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #334155; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #ef4444; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #ef4444; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e5e5e5; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #ef4444; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fca5a5; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f1f5f9; text-align: left; padding: 1rem; border-bottom: 2px solid #cbd5e1; font-weight: 700; color: #1e293b; }
+        td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #f97316; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 1: RH124 基礎篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#ssh_concept" class="nav-item"><span class="nav-icon">01</span> SSH 運作原理</a>
+            <a href="#keygen" class="nav-item"><span class="nav-icon">02</span> 免密碼登入 (Keygen)</a>
+            <a href="#scp" class="nav-item"><span class="nav-icon">03</span> 遠端傳輸 (scp)</a>
+            <a href="#tar" class="nav-item"><span class="nav-icon">04</span> 打包壓縮 (tar)</a>
+            <a href="#lab" class="nav-item" style="color:#fca5a5;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 08</span>
+                <span class="text-slate-400 font-mono text-sm">RH124 Unit 10, 13</span>
+            </div>
+            <h1>遠端連線：SSH 金鑰與安全傳輸</h1>
+            <p class="text-xl text-slate-500 max-w-3xl leading-relaxed">
+                系統管理員的日常就是「遠端工作」。今天我們要學會如何不用打密碼就能安全登入遠端主機，以及如何把檔案打包帶走。
+            </p>
+        </header>
+
+        <!-- 1. SSH Concept -->
+        <section id="ssh_concept">
+            <h2><span class="section-num">1</span> SSH 金鑰原理：鎖頭與鑰匙</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🔑 鎖匠的比喻</h4>
+                <p class="text-slate-700">
+                    <strong>公鑰 (Public Key)</strong>：就像一個「鎖頭」。你可以複製幾百個鎖頭，把它們掛在任何你想去的主機上（門上）。鎖頭可以公開給任何人看。<br>
+                    <strong>私鑰 (Private Key)</strong>：就像這把鎖頭的「鑰匙」。你必須隨身保管好，絕不能給別人。只要你有鑰匙，就能打開所有掛了你鎖頭的門。
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. ssh-keygen -->
+        <section id="keygen">
+            <h2><span class="section-num">2</span> 實作免密碼登入</h2>
+            <p class="mb-4 text-slate-600">這是 RHCE Ansible 的基礎，一定要會。</p>
+
+            <h3 class="text-lg font-bold mt-4">Step 1: 產生鑰匙對</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@workstation ~]$</span> <span class="cmd-input">ssh-keygen</span>
+<span class="cmd-comment"># 一路按 Enter 到底。</span>
+<span class="cmd-comment"># 私鑰存於 ~/.ssh/id_rsa</span>
+<span class="cmd-comment"># 公鑰存於 ~/.ssh/id_rsa.pub (要送出去的鎖頭)</span>
+            </div>
+
+            <h3 class="text-lg font-bold mt-4">Step 2: 派送鎖頭 (Copy ID)</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@workstation ~]$</span> <span class="cmd-input">ssh-copy-id user@servera</span>
+<span class="cmd-comment"># 系統會問你一次密碼。輸入成功後，鎖頭就掛上去了。</span>
+            </div>
+
+            <h3 class="text-lg font-bold mt-4">Step 3: 登入測試</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@workstation ~]$</span> <span class="cmd-input">ssh user@servera</span>
+<span class="cmd-comment"># 這次應該不需要輸入密碼就能進去了！</span>
+            </div>
+        </section>
+
+        <!-- 3. scp -->
+        <section id="scp">
+            <h2><span class="section-num">3</span> 遠端傳檔：scp (Secure Copy)</h2>
+            <p class="mb-4 text-slate-600">用法跟 <code>cp</code> 很像，只是路徑要加主機名稱。</p>
+            
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@workstation ~]$</span> <span class="cmd-input">scp file.txt user@servera:/tmp</span>
+<span class="cmd-comment"># 把本地的 file.txt 傳到 servera 的 /tmp</span>
+
+<span class="cmd-prompt">[student@workstation ~]$</span> <span class="cmd-input">scp user@servera:/etc/passwd ./backup</span>
+<span class="cmd-comment"># 把 servera 的 /etc/passwd 下載到這裡</span>
+            </div>
+        </section>
+
+        <!-- 4. tar -->
+        <section id="tar">
+            <h2><span class="section-num">4</span> 打包壓縮：tar</h2>
+            <p class="mb-4 text-slate-600">Linux 的壓縮檔通常是 <code>.tar.gz</code>。記住這個口訣：<strong>xvf (解壓), cvf (壓縮)</strong>。</p>
+
+            <table>
+                <tr>
+                    <th class="w-1/4">參數</th>
+                    <th>功能</th>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-red-600">c</td>
+                    <td>Create (建立/壓縮)</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-red-600">x</td>
+                    <td>Extract (解開)</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">v</td>
+                    <td>Verbose (顯示過程)</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">f</td>
+                    <td>File (指定檔名) - <strong>一定要放在最後面</strong></td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-green-600">z</td>
+                    <td>Gzip 壓縮 (.tar.gz)</td>
+                </tr>
+            </table>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">tar -czvf backup.tar.gz /home/student/work</span>
+<span class="cmd-comment"># 把 work 資料夾打包壓縮成 backup.tar.gz</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">tar -xvf backup.tar.gz -C /tmp</span>
+<span class="cmd-comment"># 把 backup.tar.gz 解壓縮到 /tmp 目錄 (-C Change Directory)</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-red-500 mt-12">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-none mt-0">🧪 今日實戰 Lab：備份與傳輸</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-slate-700">
+                    <li class="pl-2">
+                        <strong>建立金鑰：</strong>
+                        <br>在 workstation 產生 SSH 金鑰，並將其複製到 servera (如果你只有一台機器，可以複製給自己 <code>ssh-copy-id localhost</code>)。
+                    </li>
+                    <li class="pl-2">
+                        <strong>打包資料：</strong>
+                        <br>將 <code>/var/log</code> 目錄打包並壓縮成 <code>logs.tar.gz</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">sudo tar -czvf logs.tar.gz /var/log</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>遠端備份：</strong>
+                        <br>使用 scp 將 <code>logs.tar.gz</code> 傳送到遠端主機的 <code>/tmp</code> 目錄。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">scp logs.tar.gz user@localhost:/tmp</code>
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

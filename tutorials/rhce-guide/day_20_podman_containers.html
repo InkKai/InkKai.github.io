@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 20：Podman 容器 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffbeb; color: #451a03; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #1e1e1e; color: #d4d4d4; overflow-y: auto; z-index: 50; border-right: 1px solid #451a03; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #451a03; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #fcd34d; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #a3a3a3; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #292524; color: #fcd34d; border-left-color: #f59e0b; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #78350f; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #92400e; border-bottom: 2px solid #fde68a; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #fbbf24; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #f59e0b; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fcd34d; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #fcd34d; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #fff7ed; text-align: left; padding: 1rem; border-bottom: 2px solid #fcd34d; font-weight: 700; color: #92400e; }
+        td { padding: 1rem; border-bottom: 1px solid #fde68a; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #ea580c; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 2: RH134 進階篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> 容器 vs 虛擬機</a>
+            <a href="#podman" class="nav-item"><span class="nav-icon">02</span> Podman 指令</a>
+            <a href="#run" class="nav-item"><span class="nav-icon">03</span> 執行容器 (Run)</a>
+            <a href="#systemd" class="nav-item"><span class="nav-icon">04</span> 容器變服務 (Service)</a>
+            <a href="#lab" class="nav-item" style="color:#fcd34d;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold tracking-widest">DAY 20</span>
+                <span class="text-amber-700 font-mono text-sm">RH134 Unit 13</span>
+            </div>
+            <h1>容器時代：Podman 基礎與管理</h1>
+            <p class="text-xl text-amber-900 max-w-3xl leading-relaxed">
+                恭喜完成 Phase 2！最後一哩路，我們要學習現代 IT 最火紅的技術——容器。Red Hat 不用 Docker，我們用 <strong>Podman</strong>。為什麼？因為它不用 Root 也能跑，更安全！
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 容器是什麼？</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🍱 便當盒比喻</h4>
+                <p class="text-slate-700">
+                    <strong>虛擬機 (VM)</strong>：像是一整套行動廚房。不管你要煮什麼，都要把瓦斯爐、流理台、鍋子全部搬過去。很重、很慢。<br>
+                    <strong>容器 (Container)</strong>：像是做好的便當。廚房（Kernel）用原本電腦的就好，你只要帶食物（App + Library）過去。很輕、秒開。
+                </p>
+            </div>
+            <p class="mt-4 text-amber-900">Podman vs Docker：Podman 是 <strong>Daemonless</strong> 的，意思是它沒有一個背景長駐的肥大程式，而且支援 <strong>Rootless</strong> (一般使用者也能跑容器)。</p>
+        </section>
+
+        <!-- 2. Podman Basics -->
+        <section id="podman">
+            <h2><span class="section-num">2</span> 基礎指令</h2>
+            <p class="mb-4 text-amber-900">指令跟 Docker 幾乎一模一樣。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">podman login registry.redhat.io</span>
+<span class="cmd-comment"># 登入映像檔倉庫 (Registry)。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">podman search httpd</span>
+<span class="cmd-comment"># 搜尋 httpd 映像檔。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">podman pull registry.access.redhat.com/ubi9/httpd-24</span>
+<span class="cmd-comment"># 下載 (Pull) 映像檔到本地。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">podman images</span>
+<span class="cmd-comment"># 查看已下載的便當 (Images)。</span>
+            </div>
+        </section>
+
+        <!-- 3. Run -->
+        <section id="run">
+            <h2><span class="section-num">3</span> 執行容器：Run</h2>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">podman run -d -p 8080:80 --name myweb ubi9/httpd-24</span>
+<span class="cmd-comment"># -d: Detach (背景執行)。</span>
+<span class="cmd-comment"># -p 8080:80: 埠口對應。把外面的 8080 對應到便當裡的 80。</span>
+<span class="cmd-comment"># --name: 幫容器取個名字 (不然會是亂碼)。</span>
+            </div>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">podman ps</span>
+<span class="cmd-comment"># 查看正在跑的容器。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">podman stop myweb</span>
+<span class="cmd-comment"># 停止容器。</span>
+            </div>
+        </section>
+
+        <!-- 4. Systemd -->
+        <section id="systemd">
+            <h2><span class="section-num">4</span> 整合 Systemd (考試重點)</h2>
+            <p class="mb-4 text-amber-900">
+                Podman 容器重開機後會消失。為了讓它像一般服務一樣開機自啟，我們需要 <code>systemd</code> 幫忙。
+            </p>
+
+            <div class="alert-box">
+                <p class="font-bold text-red-800">🔥 必考步驟</p>
+                <ol class="list-decimal list-inside text-slate-700 mt-2">
+                    <li>先手動跑起來容器 (podman run ...)。</li>
+                    <li>建立 systemd 設定檔目錄：<code>mkdir -p ~/.config/systemd/user/</code></li>
+                    <li><strong>產生設定檔：</strong>
+                        <div class="cmd-block my-2 p-2">podman generate systemd --name myweb --files --new</div>
+                    </li>
+                    <li>重新載入：<code>systemctl --user daemon-reload</code></li>
+                    <li>啟用服務：<code>systemctl --user enable --now container-myweb.service</code></li>
+                    <li><strong>啟用使用者滯留 (Lingering)：</strong> 讓使用者登出後服務繼續跑。
+                        <div class="cmd-block my-2 p-2">loginctl enable-linger student</div>
+                    </li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-yellow-500 mt-12">
+                <h2 class="text-2xl font-bold text-amber-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：容器服務化</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-amber-800">
+                    <li class="pl-2">
+                        <strong>準備容器：</strong>
+                        <br>使用 <code>httpd</code> 映像檔，建立一個名為 <code>web-server</code> 的容器，Port 對應 8080:80。
+                    </li>
+                    <li class="pl-2">
+                        <strong>產生 Service 檔：</strong>
+                        <br>使用 <code>podman generate systemd</code> 產生 <code>container-web-server.service</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>設定開機自啟：</strong>
+                        <br>將 service 檔放入 <code>~/.config/systemd/user/</code>。
+                        <br>執行 <code>systemctl --user enable --now container-web-server.service</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>驗證：</strong>
+                        <br>重開機，登入後檢查 <code>podman ps</code>，確認容器有自動跑起來。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+/* ========================================================= */
+/* 1. 頁面全域樣式 */
+/* ========================================================= */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column; 
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+/* ========================================================= */
+/* 2. React 說明區塊樣式 */
+/* ========================================================= */
+.info-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 20px auto 40px;
+    padding: 30px;
+    background-color: #282c34; /* React 主題深色 */
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    color: #f8f8f8;
+}
+
+.info-container h2 {
+    color: #61DAFB; /* React 藍色 */
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #61DAFB;
+    padding-bottom: 10px;
+    text-align: center;
+}
+
+.info-container details {
+    border: 1px solid #444;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    background-color: #333;
+}
+
+.info-container summary {
+    font-weight: bold;
+    cursor: pointer;
+    color: #98ff98; 
+    outline: none;
+}
+
+.info-container p {
+    margin-top: 10px;
+    padding-left: 10px;
+}
+
+/* ========================================================= */
+/* 3. 計數器元件樣式 */
+/* ========================================================= */
+
+.counter-container {
+    padding: 40px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 600px;
+    margin-top: 20px;
+    text-align: center;
+}
+
+.counter-container h2 {
+    color: #1a237e;
+    border: none;
+}
+
+.count-display {
+    font-size: 3em;
+    margin: 20px 0;
+    color: #007bff;
+    font-weight: bold;
+}
+
+.counter-button {
+    padding: 10px 20px;
+    font-size: 1em;
+    cursor: pointer;
+    border: none;
+    border-radius: 5px;
+    margin: 0 5px;
+    transition: transform 0.2s, box-shadow 0.2s;
+    color: white;
+    font-weight: bold;
+}
+
+.decrement-btn {
+    background-color: #f44336; /* 紅色 */
+}
+
+.increment-btn {
+    background-color: #4CAF50; /* 綠色 */
+}
+
+.counter-button:not(:disabled):hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+.counter-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}

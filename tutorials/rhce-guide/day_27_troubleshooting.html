@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 27：錯誤處理 | RHCE 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; color: #0c4a6e; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #0ea5e9; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #38bdf8; border-left-color: #0ea5e9; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0c4a6e; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #0369a1; border-bottom: 2px solid #bae6fd; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #0ea5e9; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e0f2fe; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #0ea5e9; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #38bdf8; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #7dd3fc; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f0f9ff; text-align: left; padding: 1rem; border-bottom: 2px solid #7dd3fc; font-weight: 700; color: #0369a1; }
+        td { padding: 1rem; border-bottom: 1px solid #bae6fd; vertical-align: top; }
+        .analogy-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0ea5e9; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCE 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 3: RH294 自動化</p>
+        </div>
+        <div class="py-4">
+            <a href="#ignore" class="nav-item"><span class="nav-icon">01</span> 忽略錯誤</a>
+            <a href="#rescue" class="nav-item"><span class="nav-icon">02</span> 救援機制 (Block)</a>
+            <a href="#override" class="nav-item"><span class="nav-icon">03</span> 自訂成敗</a>
+            <a href="#debug" class="nav-item"><span class="nav-icon">04</span> 除錯 (Debug)</a>
+            <a href="#lab" class="nav-item" style="color:#38bdf8;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 27</span>
+                <span class="text-blue-800 font-mono text-sm">RH294 Unit 9</span>
+            </div>
+            <h1>進階技巧：錯誤處理與除錯</h1>
+            <p class="text-xl text-sky-900 max-w-3xl leading-relaxed">
+                自動化最怕「一粒老鼠屎壞了一鍋粥」。只要有一台主機報錯，預設情況下整個劇本可能會停止。今天我們要學習如何讓劇本變得「強韌」，即使跌倒了也能爬起來繼續跑，或者執行 B 計畫。
+            </p>
+        </header>
+
+        <!-- 1. Ignore Errors -->
+        <section id="ignore">
+            <h2><span class="section-num">1</span> 忽略錯誤：Ignore Errors</h2>
+            <p class="mb-4 text-slate-600">
+                有時候指令失敗是預期中的（例如檢查某個檔案是否存在，不存在會報錯，但我們不想因此停下來）。
+            </p>
+
+            <div class="cmd-block text-sm">
+<span class="cmd-input">- name: Check if file exists</span>
+<span class="cmd-input">  ansible.builtin.command: ls /tmp/missing_file</span>
+<span class="cmd-input">  ignore_errors: yes</span>
+<span class="cmd-comment"># 即使找不到檔案 (Return Code != 0)，Ansible 也會顯示紅色錯誤，但會繼續執行下一個 Task。</span>
+            </div>
+        </section>
+
+        <!-- 2. Block/Rescue -->
+        <section id="rescue">
+            <h2><span class="section-num">2</span> 救援機制：Block, Rescue, Always</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-sky-700 text-lg mb-2">⛑️ 消防演習的比喻</h4>
+                <p class="text-slate-700">
+                    <strong>Block</strong>：正常要做的事（嘗試升級資料庫）。<br>
+                    <strong>Rescue</strong>：如果 Block 失敗了（升級失敗），要執行的補救措施（還原備份）。<br>
+                    <strong>Always</strong>：不管成功或失敗，最後都要做的事（重啟服務）。
+                </p>
+            </div>
+
+            <div class="cmd-block text-sm">
+<span class="cmd-input">- name: Upgrade Transaction</span>
+<span class="cmd-input">  block:</span>
+<span class="cmd-input">    - name: Upgrade DB</span>
+<span class="cmd-input">      ansible.builtin.shell: /usr/local/bin/upgrade.sh</span>
+<span class="cmd-input">  rescue:</span>
+<span class="cmd-input">    - name: Restore DB</span>
+<span class="cmd-input">      ansible.builtin.shell: /usr/local/bin/restore.sh</span>
+<span class="cmd-input">  always:</span>
+<span class="cmd-input">    - name: Cleanup temp files</span>
+<span class="cmd-input">      ansible.builtin.file:</span>
+<span class="cmd-input">        path: /tmp/upgrade.log</span>
+<span class="cmd-input">        state: absent</span>
+            </div>
+        </section>
+
+        <!-- 3. Override -->
+        <section id="override">
+            <h2><span class="section-num">3</span> 自訂成敗：Failed_when & Changed_when</h2>
+            <p class="mb-4 text-slate-600">有時候 Ansible 判斷的成功失敗不是我們要的。</p>
+
+            <div class="cmd-block text-sm">
+<span class="cmd-input">- name: Run script</span>
+<span class="cmd-input">  ansible.builtin.command: /usr/local/bin/check_status.sh</span>
+<span class="cmd-input">  register: result</span>
+<span class="cmd-input">  failed_when: "'CRITICAL' in result.stdout"</span>
+<span class="cmd-comment"># 只有當輸出包含 "CRITICAL" 字眼時，才算失敗。其他錯誤代碼都算成功。</span>
+
+<span class="cmd-input">- name: Check date</span>
+<span class="cmd-input">  ansible.builtin.command: date</span>
+<span class="cmd-input">  changed_when: false</span>
+<span class="cmd-comment"># 告訴 Ansible：這個指令只是檢查用的，沒有修改系統，請顯示「綠色 (OK)」而不是「黃色 (Changed)」。</span>
+            </div>
+        </section>
+
+        <!-- 4. Debug -->
+        <section id="debug">
+            <h2><span class="section-num">4</span> 除錯神器：Debug 模組</h2>
+            <p class="mb-4 text-slate-600">變數抓不到？條件判斷錯誤？用 <code>debug</code> 把變數印出來看看。</p>
+
+            <div class="cmd-block text-sm">
+<span class="cmd-input">- name: Print variable</span>
+<span class="cmd-input">  ansible.builtin.debug:</span>
+<span class="cmd-input">    msg: "The hostname is {{ ansible_hostname }} and result is {{ result.stdout }}"</span>
+<span class="cmd-input">    verbosity: 1</span>
+<span class="cmd-comment"># verbosity: 1 代表只有在執行時加 -v 才會顯示這個 debug 訊息。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-sky-500 mt-12">
+                <h2 class="text-2xl font-bold text-sky-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：強韌的升級劇本</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-sky-800">
+                    <li class="pl-2">
+                        <strong>模擬失敗：</strong>
+                        <br>撰寫一個 Playbook，嘗試安裝一個<strong>不存在的套件</strong> (例如 <code>package_not_exist</code>)。
+                    </li>
+                    <li class="pl-2">
+                        <strong>加入 Rescue：</strong>
+                        <br>使用 <code>block</code> 包住安裝任務。
+                        <br>在 <code>rescue</code> 區塊中，寫一個 Task 印出 "Install failed, attempting fallback..." (使用 debug 模組)。
+                    </li>
+                    <li class="pl-2">
+                        <strong>加入 Always：</strong>
+                        <br>在 <code>always</code> 區塊中，寫一個 Task 印出 "Upgrade process finished"。
+                    </li>
+                    <li class="pl-2">
+                        <strong>執行：</strong>
+                        <br>執行劇本，觀察它是否雖然安裝失敗，但仍然執行了 Rescue 和 Always 的任務，且最後顯示 Playbook 執行成功 (因為 Rescue 救回來了)。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

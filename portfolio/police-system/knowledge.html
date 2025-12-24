@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>執法規章與 SOP</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        if (localStorage.getItem('police_token') !== 'valid') { window.location.href = 'login.html'; }
+    </script>
+    <style>
+        :root { --bg-dark: #0f172a; --card-bg: #1e293b; --text-light: #f1f5f9; }
+        body { background-color: var(--bg-dark); color: var(--text-light); font-family: 'Segoe UI', sans-serif; }
+        
+        /* Sidebar Styling - White Text */
+        .sidebar { height: 100vh; position: fixed; width: 250px; background-color: #111827; border-right: 1px solid #334151; padding-top: 20px; z-index: 1000;}
+        .sidebar a { color: #ffffff !important; padding: 12px 25px; display: block; text-decoration: none; transition: 0.3s; font-weight: 500; }
+        .sidebar a:hover, .sidebar a.active { background-color: rgba(56, 189, 248, 0.1); color: #38bdf8 !important; border-left: 4px solid #38bdf8; }
+        .sidebar .text-muted { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; margin-bottom: 5px; padding-left: 25px; color: #e2e8f0 !important; }
+        
+        .main-content { margin-left: 250px; padding: 20px; }
+
+        .sop-card { background: #1e293b; border: 1px solid #334155; margin-bottom: 10px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .sop-card:hover { border-color: #38bdf8; }
+        .sop-header { padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; display: flex; overflow-x: auto; padding: 10px 0; border-bottom: 1px solid #334155; }
+            .sidebar a { flex: 0 0 auto; padding: 8px 15px; border-left: none; }
+            .sidebar .text-muted, .sidebar .text-center { display: none; }
+            .main-content { margin-left: 0; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="text-center mb-4"><h4 class="text-white fw-bold"><i class="fa-solid fa-shield-cat me-2"></i>警務戰情</h4></div>
+        <div class="text-muted">指揮作戰</div>
+        <a href="dashboard.html"><i class="fa-solid fa-chart-line me-2"></i>戰情總覽</a>
+        <a href="intelligence.html"><i class="fa-solid fa-eye me-2"></i>情資監控</a>
+        <div class="text-muted">資源後勤</div>
+        <a href="personnel.html"><i class="fa-solid fa-users me-2"></i>警力人事</a>
+        <a href="equipment.html"><i class="fa-solid fa-gun me-2"></i>裝備倉儲</a>
+        <div class="text-muted">分析決策</div>
+        <a href="analysis.html"><i class="fa-solid fa-chart-pie me-2"></i>數據中心</a>
+        <a href="records.html"><i class="fa-solid fa-folder-open me-2"></i>案卷紀錄</a>
+        <div class="text-muted">輔助系統</div>
+        <a href="knowledge.html" class="active"><i class="fa-solid fa-book me-2"></i>SOP 規章</a>
+        <a href="ai_chat.html"><i class="fa-solid fa-robot me-2"></i>智慧助理</a>
+        <a href="#" onclick="logout()" class="mt-4 text-danger"><i class="fa-solid fa-right-from-bracket me-2"></i>登出</a>
+    </div>
+
+    <div class="main-content">
+        <h2 class="text-light mb-4">執法標準作業程序 (SOP)</h2>
+        
+        <div class="mb-4"><input type="text" class="form-control bg-dark text-light border-secondary" placeholder="搜尋規章關鍵字..."></div>
+
+        <div id="sopList"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function logout() { localStorage.removeItem('police_token'); window.location.href = 'login.html'; }
+
+        const sops = [
+            { type: "交通", title: "酒後駕車取締程序", content: "1. 攔停車輛。2. 觀察駕駛人狀態。3. 實施酒測。4. 超標則依法舉發或移送。" },
+            { type: "刑事", title: "現行犯逮捕與權利告知", content: "應告知：犯罪嫌疑、保持緘默權、選任辯護人權利、請求調查證據權利。" },
+            { type: "行政", title: "警械使用條例重點", content: "使用警械應基於急迫需要，並注意勿傷及無辜，使用後應即時報告。" },
+            { type: "資安", title: "公務電腦資安規範", content: "禁止使用公務電腦瀏覽非公務網站，禁止安裝不明軟體，USB 裝置需掃描。" }
+        ];
+
+        const list = document.getElementById('sopList');
+        sops.forEach((item, i) => {
+            let color = item.type==='交通'?'warning':(item.type==='刑事'?'danger':'info');
+            list.insertAdjacentHTML('beforeend', `
+                <div class="sop-card" data-bs-toggle="collapse" data-bs-target="#c${i}">
+                    <div class="sop-header">
+                        <span class="fw-bold"><span class="badge bg-${color} me-2 text-dark">${item.type}</span>${item.title}</span>
+                        <i class="fa-solid fa-chevron-down text-muted"></i>
+                    </div>
+                    <div class="collapse p-3 border-top border-secondary text-secondary" id="c${i}">
+                        ${item.content}
+                    </div>
+                </div>
+            `);
+        });
+    </script>
+</body>
+</html>

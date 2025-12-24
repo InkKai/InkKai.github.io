@@ -1,0 +1,452 @@
+/* --- 基礎重設 --- */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.7; /* 提高行高，更舒適 */
+    background-color: #f7f9fc; /* 輕微的米白背景 */
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 25px; /* 增加兩側邊距，更具呼吸感 */
+}
+
+h2 {
+    font-size: 3em; /* 放大標題 */
+    font-weight: 800; /* 更粗的字體 */
+    margin-bottom: 15px;
+    color: #1F2937;
+    text-align: center;
+}
+
+h3 {
+    font-size: 2em;
+    font-weight: 700;
+    margin-bottom: 25px;
+    color: #1F2937;
+    text-align: center;
+    border-bottom: 3px solid #E6EAF0; /* 增加底線質感 */
+    padding-bottom: 10px;
+}
+
+/* --- 導航欄 (Navbar) --- */
+.navbar {
+    background-color: #1F2937; /* 深色專業背景 */
+    color: white;
+    padding: 18px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* 更深的陰影 */
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.navbar h1 {
+    font-size: 1.6em;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.navbar a {
+    color: #E5E7EB;
+    text-decoration: none;
+    margin-left: 25px;
+    font-weight: 500;
+    transition: color 0.3s, transform 0.2s;
+}
+
+.navbar a:hover {
+    color: #F050A4; /* 霓虹粉色互動效果 */
+    transform: translateY(-2px);
+}
+
+/* --- 主視覺區塊 (Hero) --- */
+.hero {
+    color: white;
+    padding: 100px 0; /* 增加垂直空間 */
+    text-align: center;
+}
+
+/* 華麗漸層背景 */
+.hero-gradient {
+    background: linear-gradient(135deg, #1F2937, #374151);
+    box-shadow: inset 0 -10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.hero h2 {
+    font-size: 3.5em; /* 標題再次放大 */
+    color: white;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); /* 輕微光暈 */
+}
+
+.hero p {
+    font-size: 1.3em;
+    margin-bottom: 40px;
+    opacity: 0.9;
+}
+
+/* 華麗按鈕 */
+.cta-button {
+    display: inline-block;
+    padding: 15px 35px;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.1em;
+    transition: all 0.4s ease;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.cta-bold {
+    /* 漸層按鈕 */
+    background-image: linear-gradient(45deg, #F050A4, #6A0DAD);
+    color: white;
+}
+
+.cta-bold:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(106, 13, 173, 0.5); /* 讓陰影帶有紫色 */
+    opacity: 0.9;
+}
+
+/* --- 內容區塊基礎樣式 --- */
+section {
+    padding: 80px 0; /* 增加區塊間距 */
+}
+
+/* --- 基礎問答區塊 (QNA Grid) --- */
+.section-qna {
+    background-color: white;
+}
+
+.qna-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px; /* 增加間距 */
+    margin-top: 30px;
+}
+
+.qna-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E6EAF0;
+    padding: 30px;
+    border-radius: 12px; /* 更圓潤 */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08); /* 更明顯的陰影 */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s; /* 彈性動畫 */
+    text-align: center;
+    cursor: pointer;
+}
+
+.qna-card:hover {
+    transform: translateY(-8px); /* 向上彈跳更多 */
+    box-shadow: 0 15px 30px rgba(106, 13, 173, 0.15); /* 輕微的紫色陰影 */
+}
+
+.qna-card h4 {
+    margin: 15px 0 5px;
+    color: #1F2937;
+    font-size: 1.25em;
+}
+
+.qna-card .material-icons-outlined {
+    font-size: 3.5em; /* 圖標放大 */
+    background: -webkit-linear-gradient(45deg, #F050A4, #6A0DAD);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; /* 圖標使用漸層色 */
+}
+
+/* --- 實戰技巧區塊 (Skills Grid) - 導航區塊保持簡潔 --- */
+.section-skills {
+    background-color: #e9eff2;
+}
+
+/* --- Prompt 實戰區塊 --- */
+.section-prompt {
+    background-color: white;
+}
+
+.prompt-header {
+    font-size: 2.2em;
+    color: #F050A4; /* 鮮豔的粉色 */
+}
+
+.prompt-card {
+    background-color: #fefeff;
+    border: 1px solid #eee;
+    padding: 25px;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.prompt-title-bar h4 {
+    color: #1F2937;
+    font-size: 1.4em;
+}
+
+.prompt-card strong {
+    color: #F050A4; /* 提問關鍵詞使用粉色 */
+}
+
+/* 程式碼區塊樣式 (Code Block) - 科技感深色背景 */
+.code-block {
+    background-color: #1F2937; 
+    color: #00FFC0; /* 霓虹綠色字體 */
+    padding: 20px;
+    border-radius: 6px;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5); /* 內陰影，更像編輯器 */
+    font-size: 0.9em;
+}
+
+
+/* --- 進階應用區塊 (Advanced) - 模塊化佈局 --- */
+.section-advanced {
+    background-color: #1F2937; /* 深色背景，襯托卡片 */
+    color: white;
+}
+
+.section-advanced h3 {
+    color: white;
+    border-bottom: 3px solid #6A0DAD;
+}
+
+.advanced-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 30px;
+}
+
+.advanced-item {
+    background-color: #374151; /* 卡片略淺 */
+    padding: 30px;
+    border-radius: 10px;
+    border-top: 5px solid #F050A4; /* 頂部粉色條，增加衝擊 */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s;
+}
+
+.advanced-item:hover {
+    transform: translateY(-5px);
+    background-color: #4B5563;
+}
+
+.advanced-item h4 {
+    color: #FFD700; /* 標題使用亮黃色 */
+    margin-top: 0;
+    margin-bottom: 10px;
+    text-align: left;
+}
+
+.advanced-item .material-icons-outlined {
+    float: right;
+    font-size: 2em;
+    color: #F050A4; /* 圖標使用粉色 */
+}
+
+.advanced-item p {
+    font-size: 0.9em;
+    color: #D1D5DB;
+}
+
+/* --- 頁尾 (Footer) --- */
+footer {
+    background-color: #111827;
+    color: #9CA3AF;
+    text-align: center;
+    padding: 25px 0;
+    font-size: 0.9em;
+}
+
+/* -------------------------------------- */
+/* --- 遺失的彈窗 (Modal) 樣式 --- */
+/* -------------------------------------- */
+.modal {
+    display: none; /* 預設隱藏 */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6); /* 半透明黑色背景 */
+    backdrop-filter: blur(5px); /* 華麗的背景模糊效果 */
+}
+
+.modal-content {
+    background-color: white;
+    margin: 10% auto;
+    padding: 30px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    animation: fadeIn 0.3s;
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 30px;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #F050A4; /* 粉色 hover */
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#modal-title {
+    color: #1F2937;
+    margin-top: 0;
+    text-align: left;
+    border-bottom: 2px solid #E6EAF0;
+    padding-bottom: 10px;
+}
+
+#modal-body p {
+    margin-bottom: 15px;
+    line-height: 1.8;
+}
+
+#modal-body code {
+    background-color: #f0f0f0;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- RWD 響應式調整 --- */
+@media (max-width: 768px) {
+    .navbar .container {
+        flex-direction: column;
+        text-align: center;
+    }
+    /* ... (其他 RWD 調整保持原樣) ... */
+}/* --- 互動遊戲區塊樣式 --- */
+.section-game {
+    background-color: #f7f9fc;
+    padding: 80px 0; /* 確保與其他區塊間距一致 */
+}
+
+.game-header {
+    color: #F050A4;
+}
+
+.game-box {
+    background-color: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.problem-statement {
+    padding: 20px;
+    margin: 20px 0;
+    border: 2px solid #E6EAF0;
+    border-radius: 8px;
+    background-color: #FAFAFA;
+}
+
+/* 遊戲挑戰區：居中範例的父容器 */
+#target-box-container {
+    width: 100%;
+    height: 100px;
+    background-color: #D1D5DB; /* 淺灰色背景 */
+    display: flex; /* 示範父容器 */
+    justify-content: flex-start; /* 預設靠左 */
+    align-items: center;
+    margin-top: 15px;
+    overflow: hidden;
+}
+
+/* 居中範例的目標區塊 */
+#target-box {
+    width: 150px;
+    padding: 10px;
+    background-color: #6A0DAD; /* 紫色 */
+    color: white;
+    font-size: 0.9em;
+    border-radius: 4px;
+    /* 預設的錯誤樣式，等待被修正 */
+}
+
+/* 選項按鈕佈局 */
+.options-grid {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+}
+
+.game-option {
+    padding: 10px 20px;
+    border: 2px solid #1F2937;
+    background-color: #1F2937;
+    color: white;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-weight: 600;
+}
+
+.game-option:hover:not(:disabled) {
+    background-color: #374151;
+    transform: translateY(-2px);
+}
+
+/* 遊戲反饋樣式 */
+.feedback {
+    font-size: 1.1em;
+    margin-top: 20px;
+    min-height: 20px;
+    font-weight: bold;
+}
+
+/* 正確/錯誤的視覺反饋 */
+.correct {
+    border-color: #00BF63;
+    background-color: #00BF63;
+}
+
+.incorrect {
+    border-color: #E74C3C;
+    background-color: #E74C3C;
+}
+
+.game-option:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 修正後的樣式 (用 JS 動態添加) */
+#target-box.centered-box {
+    /* 這個 margin: 0 auto; 是遊戲的正確答案，因為 target-box 是 block 元素 */
+    margin: 0 auto;
+}

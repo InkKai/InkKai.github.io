@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打企鵝大作戰 - Kai Game Station</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* --- 修正重點 1: 加入這段，讓邊框不會撐大格子 --- */
+        * {
+            box-sizing: border-box;
+        }
+
+        .game-area {
+            /* 讓遊戲區寬度稍微寬裕一點 */
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .score-board {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: #4cc9f0;
+            font-weight: bold;
+        }
+
+        .grid {
+            width: 100%; /* 改成 100% 配合手機 */
+            max-width: 320px; /* 限制最大寬度 */
+            /* --- 修正重點 2: 高度改成 auto，讓它自動長高 --- */
+            height: auto; 
+            min-height: 320px;
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 auto;
+            border: 4px solid #0f3460;
+            border-radius: 10px;
+            background-color: #16213e;
+            /* 讓溢出的東西藏起來，避免蓋住按鈕 */
+            overflow: hidden; 
+        }
+
+        .hole {
+            flex: 0 0 33.33%; /* 強制固定 1/3 寬度 */
+            height: 100px;
+            position: relative;
+            border: 1px solid #0f3460;
+            cursor: cell;
+        }
+
+/* --- 修正後的洞穴樣式 --- */
+        .hole {
+            flex: 0 0 33.33%;
+            height: 100px;
+            position: relative;
+            border: 1px solid #0f3460;
+            cursor: cell;
+            overflow: hidden; /* 關鍵！這行一定要有，不然企鵝躲不下去 */
+            z-index: 1; /* 確保洞穴在下層 */
+        }
+
+        /* --- 修正後的企鵝樣式 (改用 transform) --- */
+        .mole {
+            width: 80%;
+            height: 80%;
+            background-image: url('https://raw.githubusercontent.com/twitter/twemoji/master/assets/72x72/1f427.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center bottom;
+            
+            position: absolute;
+            left: 10%;
+            bottom: 0; /* 固定在底部 */
+            
+            /* 預設狀態：往下位移 100% (躲起來) */
+            transform: translateY(100%); 
+            transition: transform 0.4s; /* 跳出來的動畫 */
+            
+            pointer-events: none; /* 躲起來時不能點 */
+            z-index: 2; /* 確保企鵝在洞穴上層 */
+        }
+
+        /* 當洞穴加上 .up 類別時，企鵝歸位 (跳出來) */
+        .hole.up .mole {
+            transform: translateY(0%); /* 回到原位 */
+            pointer-events: all; /* 這時候才可以點 */
+        }
+
+        /* 為了手機好按，把按鈕加大 */
+        .controls {
+            margin-top: 30px; 
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border-radius: 50px;
+            border: none;
+            background-color: #e94560;
+            color: white;
+            box-shadow: 0 4px 10px rgba(233, 69, 96, 0.4);
+            transition: transform 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #msg {
+            height: 30px;
+            margin-top: 10px;
+            color: #ffbd69;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🔨 打企鵝大作戰</h1>
+        <p>考驗你的反應速度！別讓它們跑掉！</p>
+    </header>
+
+    <div class="game-area">
+        <div class="score-board">得分：<span id="score">0</span></div>
+
+        <div class="grid">
+            <div class="hole" id="hole1"><div class="mole"></div></div>
+            <div class="hole" id="hole2"><div class="mole"></div></div>
+            <div class="hole" id="hole3"><div class="mole"></div></div>
+            <div class="hole" id="hole4"><div class="mole"></div></div>
+            <div class="hole" id="hole5"><div class="mole"></div></div>
+            <div class="hole" id="hole6"><div class="mole"></div></div>
+            <div class="hole" id="hole7"><div class="mole"></div></div>
+            <div class="hole" id="hole8"><div class="mole"></div></div>
+            <div class="hole" id="hole9"><div class="mole"></div></div>
+        </div>
+
+        <div class="controls">
+            <button onclick="startGame()">▶️ 開始遊戲</button>
+        </div>
+        <p id="msg">準備好了嗎？</p>
+    </div>
+
+    <a href="../index.html" class="back-btn">⬅️ 回到遊戲大廳</a>
+
+    <script>
+        const holes = document.querySelectorAll('.hole');
+        const scoreBoard = document.getElementById('score');
+        const moles = document.querySelectorAll('.mole');
+        let lastHole;
+        let timeUp = false;
+        let score = 0;
+
+        function randomTime(min, max) {
+            return Math.round(Math.random() * (max - min) + min);
+        }
+
+        function randomHole(holes) {
+            const idx = Math.floor(Math.random() * holes.length);
+            const hole = holes[idx];
+            if (hole === lastHole) {
+                return randomHole(holes);
+            }
+            lastHole = hole;
+            return hole;
+        }
+
+        function peep() {
+            const time = randomTime(500, 1000);
+            const hole = randomHole(holes);
+            hole.classList.add('up');
+
+            setTimeout(() => {
+                hole.classList.remove('up');
+                if (!timeUp) peep();
+            }, time);
+        }
+
+        function startGame() {
+            scoreBoard.textContent = 0;
+            score = 0;
+            timeUp = false;
+            document.getElementById('msg').innerText = "🔥 遊戲開始！快打！";
+            // 避免重複點擊開始導致加速
+            document.querySelector('button').disabled = true;
+            document.querySelector('button').style.opacity = "0.5";
+            
+            peep();
+
+            setTimeout(() => {
+                timeUp = true;
+                document.getElementById('msg').innerText = "⌛ 時間到！遊戲結束！";
+                document.querySelector('button').disabled = false;
+                document.querySelector('button').style.opacity = "1";
+            }, 10000); // 10秒
+        }
+
+        function bonk(e) {
+            if(!e.isTrusted) return;
+            score++;
+            this.parentNode.classList.remove('up');
+            scoreBoard.textContent = score;
+        }
+
+        moles.forEach(mole => mole.addEventListener('click', bonk));
+    </script>
+</body>
+</html>

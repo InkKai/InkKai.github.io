@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 7：Systemd 服務 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #334155; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #ef4444; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #ef4444; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e5e5e5; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #ef4444; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fca5a5; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f1f5f9; text-align: left; padding: 1rem; border-bottom: 2px solid #cbd5e1; font-weight: 700; color: #1e293b; }
+        td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #f97316; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 1: RH124 基礎篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> Systemd 概念</a>
+            <a href="#control" class="nav-item"><span class="nav-icon">02</span> 服務開關 (systemctl)</a>
+            <a href="#status" class="nav-item"><span class="nav-icon">03</span> 檢查狀態 (status)</a>
+            <a href="#boot" class="nav-item"><span class="nav-icon">04</span> 開機啟動 (enable)</a>
+            <a href="#lab" class="nav-item" style="color:#fca5a5;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 07</span>
+                <span class="text-slate-400 font-mono text-sm">RH124 Unit 9</span>
+            </div>
+            <h1>服務管理員：Systemd 與守護進程</h1>
+            <p class="text-xl text-slate-500 max-w-3xl leading-relaxed">
+                為什麼網頁伺服器一開機就會跑？為什麼拔掉 USB 隨身碟系統知道？這都是 Systemd 這個超級總管的功勞。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 什麼是 Systemd？</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🏢 大樓管理員的比喻</h4>
+                <p class="text-slate-700">
+                    <strong>Kernel</strong> 是大樓的建築結構，而 <strong>Systemd</strong> (PID 1) 就是大樓的「總幹事」。<br>
+                    它是一開機第一個起床的人 (PID=1)，然後負責喚醒其他所有員工 (Services)。<br>
+                    那些在背景默默工作的員工（如網頁伺服器、列印服務），我們稱為 <strong>Daemon (守護進程)</strong>，通常名稱字尾都有個 'd' (例如 httpd, sshd)。
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. Control -->
+        <section id="control">
+            <h2><span class="section-num">2</span> 遙控器：systemctl</h2>
+            <p class="mb-4 text-slate-600">我們使用 <code>systemctl</code> 指令來命令總幹事做事。</p>
+            
+            <table>
+                <tr>
+                    <th class="w-1/3">指令</th>
+                    <th>動作</th>
+                    <th>比喻</th>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">systemctl start httpd</td>
+                    <td>啟動服務</td>
+                    <td>叫員工現在開始上班。</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">systemctl stop httpd</td>
+                    <td>停止服務</td>
+                    <td>叫員工下班回家。</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">systemctl restart httpd</td>
+                    <td>重啟服務</td>
+                    <td>叫員工先下班，立刻再重新上班 (用於套用新設定)。</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">systemctl reload httpd</td>
+                    <td>重新載入</td>
+                    <td>叫員工不用下班，直接看新的工作手冊 (不中斷連線)。</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- 3. Status -->
+        <section id="status">
+            <h2><span class="section-num">3</span> 檢查狀態：status</h2>
+            <p class="mb-4 text-slate-600">想知道服務有沒有在偷懶？</p>
+            
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">systemctl status sshd</span>
+            </div>
+            
+            <ul class="list-disc list-inside space-y-2 text-slate-700 ml-4 mt-2">
+                <li><span class="text-green-600 font-bold">active (running)</span>：正常運作中。</li>
+                <li><span class="text-slate-500 font-bold">inactive (dead)</span>：沒在跑，休息中。</li>
+                <li><span class="text-red-600 font-bold">failed</span>：啟動失敗！(趕快去看 log 查原因)。</li>
+            </ul>
+        </section>
+
+        <!-- 4. Boot -->
+        <section id="boot">
+            <h2><span class="section-num">4</span> 開機設定：enable / disable</h2>
+            <p class="mb-4 text-slate-600">「現在啟動」跟「開機自動啟動」是兩回事！這是新手最常搞混的。</p>
+
+            <div class="grid grid-cols-2 gap-6">
+                <div class="bg-blue-50 p-4 rounded border border-blue-200">
+                    <h4 class="font-bold text-blue-800 mb-2">systemctl enable httpd</h4>
+                    <p class="text-sm text-slate-600">
+                        <strong>設定為「開機自動啟動」。</strong>
+                        <br>它會在 <code>/etc/systemd/system/</code> 建立一個連結。
+                        <br>注意：這指令<strong>不會</strong>讓服務「現在」立刻跑起來。
+                    </p>
+                </div>
+                <div class="bg-red-50 p-4 rounded border border-red-200">
+                    <h4 class="font-bold text-red-800 mb-2">systemctl disable httpd</h4>
+                    <p class="text-sm text-slate-600">
+                        <strong>取消開機自動啟動。</strong>
+                        <br>下次重開機，它就不會自己跑起來了。
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-yellow-50 p-4 rounded border border-yellow-200 mt-6">
+                <p class="font-bold text-yellow-800">💡 懶人技巧</p>
+                <p class="text-sm text-yellow-900">
+                    如果你想「設定開機啟動」同時「現在立刻啟動」，可以用：
+                    <br><code>systemctl enable --now httpd</code>
+                </p>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-red-500 mt-12">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-none mt-0">🧪 今日實戰 Lab：網頁伺服器管理</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-slate-700">
+                    <li class="pl-2">
+                        <strong>安裝服務 (預先準備)：</strong>
+                        <br>先裝好 Apache 網頁伺服器 (httpd)。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">sudo dnf install httpd -y</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>啟動並設為開機自啟：</strong>
+                        <br>使用一行指令完成這兩件事。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">sudo systemctl enable --now httpd</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>確認狀態：</strong>
+                        <br>檢查它是否真的在跑，且是 enabled 狀態。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">systemctl status httpd</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>禁止服務：</strong>
+                        <br>讓它下次開機不會自動跑，但現在不要關掉它。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">sudo systemctl disable httpd</code>
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>警政數據中心</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        if (localStorage.getItem('police_token') !== 'valid') { window.location.href = 'login.html'; }
+    </script>
+    <style>
+        :root { --bg-dark: #0f172a; --card-bg: #1e293b; --text-light: #f1f5f9; }
+        body { background-color: var(--bg-dark); color: var(--text-light); font-family: 'Segoe UI', sans-serif; }
+        
+        /* Sidebar Styling - White Text */
+        .sidebar { height: 100vh; position: fixed; width: 250px; background-color: #111827; border-right: 1px solid #334151; padding-top: 20px; z-index: 1000;}
+        .sidebar a { color: #ffffff !important; padding: 12px 25px; display: block; text-decoration: none; transition: 0.3s; font-weight: 500; }
+        .sidebar a:hover, .sidebar a.active { background-color: rgba(56, 189, 248, 0.1); color: #38bdf8 !important; border-left: 4px solid #38bdf8; }
+        .sidebar .text-muted { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-top: 20px; margin-bottom: 5px; padding-left: 25px; color: #e2e8f0 !important; }
+        
+        .main-content { margin-left: 250px; padding: 20px; }
+
+        .chart-card { background: #1e293b; border: 1px solid #334155; border-radius: 10px; padding: 20px; height: 100%; }
+        
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; height: auto; position: relative; display: flex; overflow-x: auto; padding: 10px 0; border-bottom: 1px solid #334155; }
+            .sidebar a { flex: 0 0 auto; padding: 8px 15px; border-left: none; }
+            .sidebar .text-muted, .sidebar .text-center { display: none; }
+            .main-content { margin-left: 0; padding: 10px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <div class="text-center mb-4"><h4 class="text-white fw-bold"><i class="fa-solid fa-shield-cat me-2"></i>警務戰情</h4></div>
+        <div class="text-muted">指揮作戰</div>
+        <a href="dashboard.html"><i class="fa-solid fa-chart-line me-2"></i>戰情總覽</a>
+        <a href="intelligence.html"><i class="fa-solid fa-eye me-2"></i>情資監控</a>
+        <div class="text-muted">資源後勤</div>
+        <a href="personnel.html"><i class="fa-solid fa-users me-2"></i>警力人事</a>
+        <a href="equipment.html"><i class="fa-solid fa-gun me-2"></i>裝備倉儲</a>
+        <div class="text-muted">分析決策</div>
+        <a href="analysis.html" class="active"><i class="fa-solid fa-chart-pie me-2"></i>數據中心</a>
+        <a href="records.html"><i class="fa-solid fa-folder-open me-2"></i>案卷紀錄</a>
+        <div class="text-muted">輔助系統</div>
+        <a href="knowledge.html"><i class="fa-solid fa-book me-2"></i>SOP 規章</a>
+        <a href="ai_chat.html"><i class="fa-solid fa-robot me-2"></i>智慧助理</a>
+        <a href="#" onclick="logout()" class="mt-4 text-danger"><i class="fa-solid fa-right-from-bracket me-2"></i>登出</a>
+    </div>
+
+    <div class="main-content">
+        <h2 class="text-light mb-4">警政數據分析中心</h2>
+        
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h5 class="text-light mb-4"><i class="fa-solid fa-chart-pie text-info me-2"></i>案件類型分佈</h5>
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h5 class="text-light mb-4"><i class="fa-solid fa-wave-square text-success me-2"></i>月度治安趨勢</h5>
+                    <canvas id="lineChart"></canvas>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="chart-card">
+                    <h5 class="text-light mb-4"><i class="fa-solid fa-clock text-warning me-2"></i>報案時段熱點分析</h5>
+                    <canvas id="barChart" height="80"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function logout() { localStorage.removeItem('police_token'); window.location.href = 'login.html'; }
+
+        // Chart Settings
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.borderColor = '#334155';
+
+        // 1. Pie
+        new Chart(document.getElementById('pieChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['交通事故', '違規停車', '竊盜案件', '糾紛調解', '其他'],
+                datasets: [{
+                    data: [35, 25, 15, 15, 10],
+                    backgroundColor: ['#ef4444', '#f97316', '#eab308', '#3b82f6', '#64748b'],
+                    borderWidth: 0
+                }]
+            },
+            options: { plugins: { legend: { position: 'right' } } }
+        });
+
+        // 2. Line
+        new Chart(document.getElementById('lineChart'), {
+            type: 'line',
+            data: {
+                labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                datasets: [{
+                    label: '案件總數',
+                    data: [65, 59, 80, 81, 56, 55],
+                    borderColor: '#22c55e',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: { plugins: { legend: { display: false } } }
+        });
+
+        // 3. Bar
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: ['00-04', '04-08', '08-12', '12-16', '16-20', '20-24'],
+                datasets: [{
+                    label: '報案量',
+                    data: [12, 5, 25, 40, 65, 45],
+                    backgroundColor: '#38bdf8',
+                    borderRadius: 5
+                }]
+            },
+            options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+        });
+    </script>
+</body>
+</html>

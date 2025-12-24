@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧冷氣控制</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* 遙控器本體 */
+        .ac-controller {
+            background: white;
+            width: 320px;
+            padding: 30px;
+            border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: all 0.5s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 關機狀態的樣式 */
+        .ac-controller.off {
+            filter: grayscale(100%);
+            opacity: 0.8;
+            background: #e0e0e0;
+        }
+
+        /* 顯示螢幕區域 */
+        .display-screen {
+            background: linear-gradient(135deg, #6dd5fa 0%, #2980b9 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 25px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.1);
+            position: relative;
+            height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .ac-controller.off .display-screen {
+            background: #333; /* 關機時螢幕變黑 */
+            color: #444;
+        }
+
+        .temp-display {
+            font-size: 4rem;
+            font-weight: bold;
+            line-height: 1;
+        }
+
+        .unit {
+            font-size: 1.5rem;
+            vertical-align: super;
+        }
+
+        .mode-text {
+            margin-top: 10px;
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* 關機時顯示的文字 */
+        .off-text {
+            display: none;
+            font-size: 1.5rem;
+            color: #555;
+        }
+        .ac-controller.off .off-text {
+            display: block;
+        }
+        .ac-controller.off .temp-display, 
+        .ac-controller.off .mode-text {
+            display: none;
+        }
+
+        /* 按鈕區域 */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            border: none;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.3s;
+            background: #f1f3f6;
+            color: #333;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 溫度按鈕 */
+        .btn-temp {
+            background: white;
+            border: 2px solid #eee;
+        }
+
+        /* 電源按鈕特別樣式 */
+        .power-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: #ff4757;
+            color: white;
+            font-size: 1.5rem;
+            margin-top: 10px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+            transition: all 0.3s;
+        }
+
+        .power-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* 開機狀態下的電源燈號模擬 */
+        .indicator {
+            width: 8px;
+            height: 8px;
+            background: #2ed573;
+            border-radius: 50%;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            box-shadow: 0 0 10px #2ed573;
+            transition: 0.3s;
+        }
+        
+        .ac-controller.off .indicator {
+            background: #555;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="ac-controller" id="controller">
+        <div class="indicator"></div>
+
+        <div class="display-screen">
+            <div class="temp-display" id="tempText">26<span class="unit">°C</span></div>
+            <div class="mode-text" id="modeText">
+                <i class="fa-solid fa-snowflake"></i> 冷氣模式
+            </div>
+            <div class="off-text">OFF</div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-temp" onclick="changeTemp(-1)">
+                <i class="fa-solid fa-minus"></i>
+            </button>
+            <button class="btn btn-temp" onclick="changeTemp(1)">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+            
+            <button class="btn" onclick="changeMode()">
+                <i class="fa-solid fa-wind"></i> 模式
+            </button>
+            <button class="btn" onclick="toggleFan()">
+                <i class="fa-solid fa-fan"></i> 風速
+            </button>
+        </div>
+
+        <button class="power-btn" onclick="togglePower()">
+            <i class="fa-solid fa-power-off"></i>
+        </button>
+    </div>
+
+    <script src="js/ac.js"></script>
+    
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 25：模板與檔案 | RHCE 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; color: #0c4a6e; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #0ea5e9; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #38bdf8; border-left-color: #0ea5e9; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0c4a6e; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #0369a1; border-bottom: 2px solid #bae6fd; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #0ea5e9; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e0f2fe; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #0ea5e9; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #38bdf8; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #7dd3fc; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f0f9ff; text-align: left; padding: 1rem; border-bottom: 2px solid #7dd3fc; font-weight: 700; color: #0369a1; }
+        td { padding: 1rem; border-bottom: 1px solid #bae6fd; vertical-align: top; }
+        .analogy-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0ea5e9; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCE 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 3: RH294 自動化</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> Copy vs Template</a>
+            <a href="#jinja2" class="nav-item"><span class="nav-icon">02</span> Jinja2 語法</a>
+            <a href="#module" class="nav-item"><span class="nav-icon">03</span> Template 模組</a>
+            <a href="#lab" class="nav-item" style="color:#38bdf8;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 25</span>
+                <span class="text-blue-800 font-mono text-sm">RH294 Unit 6</span>
+            </div>
+            <h1>檔案派送：Template 模板引擎</h1>
+            <p class="text-xl text-sky-900 max-w-3xl leading-relaxed">
+                自動化的精髓在於「客製化」。如果 100 台主機的設定檔都長一模一樣，那用 <code>copy</code> 就好。但如果每台主機的 IP、名稱都不一樣呢？這時候就需要 <strong>Jinja2 Template</strong>。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> Copy 與 Template 的差別</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-sky-700 text-lg mb-2">📠 影印機 vs 填空獎狀</h4>
+                <p class="text-slate-700">
+                    <strong>copy 模組</strong>：就像影印機。來源檔案是什麼，印出來就是什麼，完全靜態。
+                    <br><strong>template 模組</strong>：就像套印獎狀。檔案裡留有空格 (<code>{{ name }}</code>)，印表機 (Ansible) 在列印時，會自動幫你填上該主機的名字、IP 或其他變數。
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. Jinja2 -->
+        <section id="jinja2">
+            <h2><span class="section-num">2</span> Jinja2 語法 (Python 模板語言)</h2>
+            <p class="mb-4 text-slate-600">Jinja2 檔案的副檔名通常是 <code>.j2</code>。</p>
+
+            <h3 class="font-bold text-sky-800 mt-4">1. 變數置換 (最常用)</h3>
+            <div class="bg-slate-100 p-4 rounded border border-slate-300 font-mono text-sm mb-4">
+                Welcome to {{ ansible_hostname }}.<br>
+                My IP is {{ ansible_default_ipv4.address }}.
+            </div>
+
+            <h3 class="font-bold text-sky-800 mt-4">2. 迴圈 (For Loop)</h3>
+            <div class="bg-slate-100 p-4 rounded border border-slate-300 font-mono text-sm mb-4">
+                {% for user in users %}<br>
+                User: {{ user }}<br>
+                {% endfor %}
+            </div>
+
+            <h3 class="font-bold text-sky-800 mt-4">3. 條件 (If)</h3>
+            <div class="bg-slate-100 p-4 rounded border border-slate-300 font-mono text-sm mb-4">
+                {% if PORT is defined %}<br>
+                Listen {{ PORT }}<br>
+                {% else %}<br>
+                Listen 80<br>
+                {% endif %}
+            </div>
+        </section>
+
+        <!-- 3. Module -->
+        <section id="module">
+            <h2><span class="section-num">3</span> 使用 Template 模組</h2>
+            <div class="cmd-block text-sm">
+<span class="cmd-input">- name: Deploy config file</span>
+<span class="cmd-input">  ansible.builtin.template:</span>
+<span class="cmd-input">    src: httpd.conf.j2</span> <span class="cmd-comment"># 本地的模板檔 (.j2)</span>
+<span class="cmd-input">    dest: /etc/httpd/conf/httpd.conf</span> <span class="cmd-comment"># 遠端的目的檔 (沒有 .j2)</span>
+<span class="cmd-input">    owner: root</span>
+<span class="cmd-input">    group: root</span>
+<span class="cmd-input">    mode: '0644'</span>
+<span class="cmd-input">  notify: Restart Httpd</span> <span class="cmd-comment"># 通常設定檔改了就要重啟</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-sky-500 mt-12">
+                <h2 class="text-2xl font-bold text-sky-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：動態歡迎頁面</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-sky-800">
+                    <li class="pl-2">
+                        <strong>建立模板 (index.html.j2)：</strong>
+                        <br>內容包含：
+                        <br><code>Hello, I am {{ ansible_hostname }}.</code>
+                        <br><code>My OS is {{ ansible_distribution }} {{ ansible_distribution_version }}.</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>撰寫 Playbook：</strong>
+                        <br>使用 <code>template</code> 模組，將 <code>index.html.j2</code> 部署到所有 web servers 的 <code>/var/www/html/index.html</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>執行與驗證：</strong>
+                        <br>執行劇本。
+                        <br>使用 <code>curl</code> 訪問不同的主機，你會發現它們回傳的網頁內容雖然來自同一個模板，但顯示的 Hostname 和版本號都是**各自**的。這就是自動化的威力！
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

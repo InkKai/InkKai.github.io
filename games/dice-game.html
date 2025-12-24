@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JS 骰子遊戲：機率與陣列應用 (優化版)</title>
+    <style>
+        /* --- 升級版視覺設定 --- */
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #ec4899;
+            --success-color: #10b981;
+            --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+            --glass-bg: rgba(255, 255, 255, 0.9);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.8);
+            --text-main: #1f2937;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            padding: 20px;
+            color: var(--text-main);
+            overflow-x: hidden; /* 防止彩帶超出 */
+        }
+
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 600px; /* 加寬一點放統計 */
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 2rem;
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+        }
+
+        .tagline {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        /* --- 骰子區 --- */
+        .dice-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px; /* 增加間距 */
+            margin: 40px 0;
+            perspective: 800px; /* 調整透視感 */
+        }
+
+        .dice {
+            width: 80px; /* 稍微放大 */
+            height: 80px;
+            background: white;
+            border-radius: 16px; /* 更圓潤 */
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.05), 0 10px 20px rgba(0,0,0,0.15); /* 更深的陰影 */
+            position: relative;
+            display: grid;
+            grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+            padding: 6px;
+            box-sizing: border-box;
+            transform-style: preserve-3d;
+            border: 1px solid #f0f0f0;
+            transition: transform 0.2s; /* 加入平滑過渡 */
+        }
+
+        .dot {
+            background-color: #333;
+            border-radius: 50%;
+            margin: 4px;
+            opacity: 0;
+            transition: opacity 0.1s;
+            box-shadow: inset 1px 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .dice.red-dot .dot { background-color: #ef4444; }
+
+        /* 點數樣式 */
+        .face-1 .dot:nth-child(5) { opacity: 1; width: 18px; height: 18px; margin: auto; background-color: #ef4444;}
+        .face-2 .dot:nth-child(1), .face-2 .dot:nth-child(9) { opacity: 1; }
+        .face-3 .dot:nth-child(1), .face-3 .dot:nth-child(5), .face-3 .dot:nth-child(9) { opacity: 1; }
+        .face-4 .dot:nth-child(1), .face-4 .dot:nth-child(3), .face-4 .dot:nth-child(7), .face-4 .dot:nth-child(9) { opacity: 1; }
+        .face-5 .dot:nth-child(1), .face-5 .dot:nth-child(3), .face-5 .dot:nth-child(5), .face-5 .dot:nth-child(7), .face-5 .dot:nth-child(9) { opacity: 1; }
+        .face-6 .dot:nth-child(1), .face-6 .dot:nth-child(3), .face-6 .dot:nth-child(4), .face-6 .dot:nth-child(6), .face-6 .dot:nth-child(7), .face-6 .dot:nth-child(9) { opacity: 1; }
+
+        /* --- 下注按鈕區 --- */
+        .bet-section {
+            background: rgba(255,255,255,0.5);
+            padding: 15px;
+            border-radius: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .bet-title {
+            font-size: 0.9rem;
+            color: #555;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn-bet {
+            padding: 10px 25px;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+            max-width: 120px;
+        }
+
+        .btn-small {
+            background: #e0f2fe;
+            color: #0284c7;
+            border-color: #bae6fd;
+        }
+        .btn-small:hover, .btn-small.active { background: #0284c7; color: white; }
+
+        .btn-big {
+            background: #ffe4e6;
+            color: #e11d48;
+            border-color: #fecdd3;
+        }
+        .btn-big:hover, .btn-big.active { background: #e11d48; color: white; }
+
+        /* --- 結果顯示 --- */
+        .result-box {
+            margin: 20px 0;
+            min-height: 50px;
+        }
+        .result-text {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #333;
+        }
+        .win-tag {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            animation: popIn 0.3s;
+        }
+
+        /* --- 統計與紀錄 --- */
+        .dashboard {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        
+        .panel {
+            flex: 1;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+            font-size: 0.85rem;
+        }
+        
+        .panel h3 { margin: 0 0 8px 0; font-size: 0.9rem; color: #64748b; border-bottom: 2px solid #e2e8f0; padding-bottom: 4px;}
+
+        .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+        
+        /* 歷史紀錄列表 */
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #eee;
+            padding: 3px 0;
+            font-family: monospace;
+        }
+        .history-item span:last-child { font-weight: bold; }
+        .history-item.win { color: #10b981; }
+
+        /* --- 程式解密 (Teacher's Corner) --- */
+        .tech-corner {
+            margin-top: 25px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: left;
+        }
+        .tech-details {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 5px;
+            display: none; /* 預設隱藏 */
+            font-family: monospace;
+            line-height: 1.5;
+        }
+        .toggle-tech {
+            background: none;
+            border: none;
+            color: #6366f1;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 0.8rem;
+            padding: 0;
+        }
+
+        /* --- 優化後的動畫定義 --- */
+        /* 更生動的 3D 翻滾：加入 scale (縮放) 讓它看起來有跳起來的感覺 */
+        @keyframes rollRotate {
+            0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(1); }
+            50% { transform: rotateX(360deg) rotateY(180deg) rotateZ(180deg) scale(1.1); } /* 變大一點點 */
+            100% { transform: rotateX(720deg) rotateY(360deg) rotateZ(360deg) scale(1); }
+        }
+        .rolling { 
+            animation: rollRotate 0.6s linear infinite; /* 動畫時間改為 0.6s 配合慢一點的節奏 */
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            80% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* --- 彩帶特效 (Canvas) --- */
+        #confetti-canvas {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="container">
+        <h1>🎲 隨機數博弈模擬</h1>
+        <div class="tagline">結合陣列紀錄與機率統計的互動實驗</div>
+
+        <div class="dice-container">
+            <div id="dice1" class="dice face-1"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <div id="dice2" class="dice face-2"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+            <div id="dice3" class="dice face-3"><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+        </div>
+
+        <div class="bet-section">
+            <div class="bet-title">請預測結果 (3-10為小 / 11-18為大)</div>
+            <div class="btn-group">
+                <button class="btn-bet btn-small" onclick="selectBet('small')">押 小 (Small)</button>
+                <button class="btn-bet btn-big" onclick="selectBet('big')">押 大 (Big)</button>
+            </div>
+        </div>
+
+        <div class="result-box">
+            <div id="final-result" class="result-text">請先選擇下注</div>
+        </div>
+
+        <!-- 儀表板：統計與紀錄 -->
+        <div class="dashboard">
+            <div class="panel">
+                <h3>📊 機率統計 (Statistics)</h3>
+                <div class="stat-row"><span>總次數:</span> <span id="stat-total">0</span></div>
+                <div class="stat-row"><span>開大:</span> <span id="stat-big">0</span></div>
+                <div class="stat-row"><span>開小:</span> <span id="stat-small">0</span></div>
+                <div class="stat-row"><span>豹子:</span> <span id="stat-leo" style="color:orange;">0</span></div>
+            </div>
+            <div class="panel">
+                <h3>📝 歷史紀錄 (Array Log)</h3>
+                <ul id="history-list" class="history-list">
+                    <li style="color:#aaa; text-align:center;">尚未有紀錄...</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 程式技術解密 -->
+        <div class="tech-corner">
+            💡 <strong>給老師的開發筆記：</strong> 
+            <button class="toggle-tech" onclick="toggleDetails()">點此查看程式邏輯</button>
+            <div id="tech-details" class="tech-details">
+                1. <strong>亂數核心：</strong> 使用 `Math.floor(Math.random()*6)+1` 模擬真實擲骰機率。<br>
+                2. <strong>視覺模擬：</strong> 使用 `setInterval` (100ms) 製造視覺跳動，配合 CSS keyframes 3D 翻轉。<br>
+                3. <strong>資料結構：</strong> 使用 Array `historyLog.unshift()` 實作堆疊概念，保存最近紀錄。<br>
+                4. <strong>邏輯判斷：</strong> 巢狀 `if/else` 判斷豹子、大、小，以及比對使用者下注結果。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 狀態變數 (State Management)
+        let currentBet = null;
+        let isRolling = false;
+        
+        // 資料儲存 (Data Storage - 老師強調的陣列)
+        let historyLog = []; 
+        let stats = { total: 0, big: 0, small: 0, leopard: 0 };
+
+        // 選擇下注
+        function selectBet(type) {
+            if (isRolling) return;
+            
+            // 更新 UI 狀態
+            document.querySelectorAll('.btn-bet').forEach(b => b.classList.remove('active'));
+            if (type === 'small') document.querySelector('.btn-small').classList.add('active');
+            if (type === 'big') document.querySelector('.btn-big').classList.add('active');
+            
+            currentBet = type;
+            document.getElementById('final-result').innerHTML = `已押注：<span style="color:${type==='big'?'#e11d48':'#0284c7'}">${type==='big'?'大':'小'}</span>，開始擲骰！`;
+            
+            // 自動開始擲骰
+            startRoll();
+        }
+
+        function startRoll() {
+            if (isRolling) return;
+            isRolling = true;
+            
+            const diceEls = [document.getElementById('dice1'), document.getElementById('dice2'), document.getElementById('dice3')];
+            const resultText = document.getElementById('final-result');
+
+            // 1. 啟動動畫 (Visuals)
+            diceEls.forEach(d => d.classList.add('rolling'));
+            resultText.innerText = "🎲 骰子滾動中...";
+
+            // 2. 模擬跳動數字 (setInterval)
+            // ★★★ 修改處：把時間調整為 100ms (0.1秒) ★★★
+            // 讓眼睛可以稍微看清楚每一次的變化，視覺上會更有感
+            let animInterval = setInterval(() => {
+                diceEls.forEach(d => {
+                    d.className = `dice rolling face-${Math.floor(Math.random() * 6) + 1}`;
+                });
+            }, 100); 
+
+            // 3. 停止並結算 (setTimeout)
+            setTimeout(() => {
+                clearInterval(animInterval);
+                diceEls.forEach(d => d.classList.remove('rolling'));
+
+                // 產生最終結果 (Logic)
+                const d1 = Math.floor(Math.random() * 6) + 1;
+                const d2 = Math.floor(Math.random() * 6) + 1;
+                const d3 = Math.floor(Math.random() * 6) + 1;
+                const total = d1 + d2 + d3;
+
+                // 顯示定格畫面
+                diceEls[0].className = `dice face-${d1}`;
+                diceEls[1].className = `dice face-${d2}`;
+                diceEls[2].className = `dice face-${d3}`;
+
+                // 判斷結果類型
+                let resultType = "small";
+                if (d1 === d2 && d2 === d3) resultType = "leopard";
+                else if (total >= 11) resultType = "big";
+
+                // 更新統計數據 (Data Processing)
+                updateStats(resultType, total);
+
+                // 判斷輸贏
+                let isWin = false;
+                let displayHtml = `<span style="font-size:1rem; color:#666;">總和 ${total} - </span> `;
+
+                if (resultType === "leopard") {
+                    displayHtml += `<span style="color:orange;">🎉 豹子通殺!</span>`;
+                } else if (resultType === currentBet) {
+                    displayHtml += `<span style="color:${resultType==='big'?'#e11d48':'#0284c7'}">${resultType==='big'?'大':'小'}</span> <span class="win-tag">預測成功!</span>`;
+                    isWin = true;
+                } else {
+                    displayHtml += `<span style="color:${resultType==='big'?'#e11d48':'#0284c7'}">${resultType==='big'?'大':'小'}</span>`;
+                }
+
+                resultText.innerHTML = displayHtml;
+
+                // 更新歷史紀錄 (Array)
+                addHistory(total, resultType, isWin);
+
+                // 勝利特效
+                if (isWin) fireConfetti();
+
+                isRolling = false;
+                currentBet = null; // 重置下注
+                document.querySelectorAll('.btn-bet').forEach(b => b.classList.remove('active'));
+
+            }, 1500); // 稍微延長一點等待時間到 1.5秒，增加緊張感
+        }
+
+        // 更新統計函數
+        function updateStats(type, total) {
+            stats.total++;
+            if (type === 'leopard') stats.leopard++;
+            else if (type === 'big') stats.big++;
+            else stats.small++;
+
+            document.getElementById('stat-total').innerText = stats.total;
+            document.getElementById('stat-big').innerText = stats.big;
+            document.getElementById('stat-small').innerText = stats.small;
+            document.getElementById('stat-leo').innerText = stats.leopard;
+        }
+
+        // 新增歷史紀錄 (Array Manipulation)
+        function addHistory(total, type, isWin) {
+            const list = document.getElementById('history-list');
+            const typeText = type === 'leopard' ? '豹' : (type === 'big' ? '大' : '小');
+            
+            // 建立紀錄物件
+            const logItem = { total, typeText, isWin, time: new Date().toLocaleTimeString() };
+            historyLog.unshift(logItem); // 加到陣列最前面
+            if (historyLog.length > 10) historyLog.pop(); // 只保留最近 10 筆
+
+            // 重新渲染列表
+            let html = '';
+            historyLog.forEach(item => {
+                const winClass = item.isWin ? 'win' : '';
+                html += `<li class="history-item ${winClass}">
+                            <span>${item.time.split(' ')[0]}</span>
+                            <span>${item.total}點 (${item.typeText})</span>
+                         </li>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function toggleDetails() {
+            const el = document.getElementById('tech-details');
+            el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // --- 簡單的彩帶特效函式 (Canvas Confetti) ---
+        function fireConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            const pieces = [];
+            const colors = ['#f43f5e', '#3b82f6', '#10b981', '#fbbf24', '#8b5cf6'];
+
+            for (let i = 0; i < 100; i++) {
+                pieces.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    w: Math.random() * 10 + 5,
+                    h: Math.random() * 10 + 5,
+                    vx: (Math.random() - 0.5) * 20,
+                    vy: (Math.random() - 0.5) * 20 - 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    life: 100
+                });
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                let active = false;
+                pieces.forEach(p => {
+                    if (p.life > 0) {
+                        ctx.fillStyle = p.color;
+                        ctx.fillRect(p.x, p.y, p.w, p.h);
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        p.vy += 0.5; // 重力
+                        p.life--;
+                        active = true;
+                    }
+                });
+                if (active) requestAnimationFrame(draw);
+                else ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+            draw();
+        }
+    </script>
+</body>
+</html>

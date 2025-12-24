@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 12：排程任務 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffbeb; color: #451a03; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #1e1e1e; color: #d4d4d4; overflow-y: auto; z-index: 50; border-right: 1px solid #451a03; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #451a03; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #fcd34d; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #a3a3a3; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #292524; color: #fcd34d; border-left-color: #f59e0b; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #78350f; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #92400e; border-bottom: 2px solid #fde68a; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #fbbf24; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #f59e0b; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fcd34d; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #fcd34d; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #fff7ed; text-align: left; padding: 1rem; border-bottom: 2px solid #fcd34d; font-weight: 700; color: #92400e; }
+        td { padding: 1rem; border-bottom: 1px solid #fde68a; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #ea580c; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 2: RH134 進階篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> 鬧鐘與行事曆</a>
+            <a href="#at" class="nav-item"><span class="nav-icon">02</span> 臨時任務 (at)</a>
+            <a href="#cron" class="nav-item"><span class="nav-icon">03</span> 週期任務 (crontab)</a>
+            <a href="#system" class="nav-item"><span class="nav-icon">04</span> 系統排程 (/etc/cron.d)</a>
+            <a href="#lab" class="nav-item" style="color:#fcd34d;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold tracking-widest">DAY 12</span>
+                <span class="text-amber-700 font-mono text-sm">RH134 Unit 2</span>
+            </div>
+            <h1>排程大師：Crontab 與臨時任務</h1>
+            <p class="text-xl text-amber-900 max-w-3xl leading-relaxed">
+                系統管理員不需要半夜起床備份資料。我們有忠實的僕人會幫我們自動執行。今天我們學習如何設定「一次性鬧鐘 (at)」和「週期性行事曆 (cron)」。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 兩種排程觀念</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">⏰ 鬧鐘 vs 📅 行事曆</h4>
+                <p class="text-slate-700">
+                    <strong>at (鬧鐘)</strong>：只會響一次。「下午 5 點叫我」。做完就沒了。<br>
+                    <strong>cron (行事曆)</strong>：週期性重複。「每週一早上 9 點開會」。會一直重複直到你刪除它。
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. at -->
+        <section id="at">
+            <h2><span class="section-num">2</span> 臨時任務：at</h2>
+            <p class="mb-4 text-amber-900">適合用在「等一下我要重開機，但我怕忘記」這種情況。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">at 17:00</span>
+<span class="cmd-output">warning: commands will be executed using /bin/sh</span>
+<span class="cmd-output">at&gt;</span> <span class="cmd-input">echo "Time to go home" > /tmp/msg.txt</span>
+<span class="cmd-output">at&gt;</span> <span class="cmd-comment"># 按 Ctrl + D 結束輸入</span>
+<span class="cmd-output">job 1 at Tue Nov 30 17:00:00 2025</span>
+            </div>
+
+            <p class="mt-4 font-bold text-amber-900">常用指令：</p>
+            <ul class="list-disc list-inside ml-4 text-amber-800">
+                <li><code>atq</code>：列出目前等待中的任務 (Queue)。</li>
+                <li><code>atrm [ID]</code>：刪除任務。</li>
+                <li><code>at now + 5min</code>：5 分鐘後執行。</li>
+            </ul>
+        </section>
+
+        <!-- 3. Cron -->
+        <section id="cron">
+            <h2><span class="section-num">3</span> 週期任務：Crontab</h2>
+            <p class="mb-4 text-amber-900">這是每個工程師都要背下來的咒語。它有 5 個欄位。</p>
+
+            <div class="bg-yellow-100 p-4 rounded border border-yellow-300 font-mono text-center text-lg font-bold text-amber-900">
+                分 &nbsp; 時 &nbsp; 日 &nbsp; 月 &nbsp; 週
+            </div>
+            
+            <table class="mt-4">
+                <tr>
+                    <th class="w-1/4">欄位</th>
+                    <th>範圍</th>
+                    <th>範例</th>
+                </tr>
+                <tr>
+                    <td class="font-bold">分 (Minute)</td>
+                    <td>0-59</td>
+                    <td><code>30</code> (30分時)</td>
+                </tr>
+                <tr>
+                    <td class="font-bold">時 (Hour)</td>
+                    <td>0-23</td>
+                    <td><code>09</code> (早上9點)</td>
+                </tr>
+                <tr>
+                    <td class="font-bold">日 (Day of Month)</td>
+                    <td>1-31</td>
+                    <td><code>01</code> (每月1號)</td>
+                </tr>
+                <tr>
+                    <td class="font-bold">月 (Month)</td>
+                    <td>1-12</td>
+                    <td><code>12</code> (12月)</td>
+                </tr>
+                <tr>
+                    <td class="font-bold">週 (Day of Week)</td>
+                    <td>0-7 (0,7是週日)</td>
+                    <td><code>5</code> (週五)</td>
+                </tr>
+            </table>
+
+            <div class="bg-white p-4 rounded border border-amber-200 mt-4">
+                <p class="font-bold text-amber-800">範例解讀：</p>
+                <ul class="list-disc list-inside text-sm text-amber-900">
+                    <li><code>00 02 * * *</code>：每天凌晨 2:00。</li>
+                    <li><code>*/5 * * * *</code>：每隔 5 分鐘。</li>
+                    <li><code>00 09 * * 1-5</code>：週一到週五的早上 9:00 (上班日)。</li>
+                </ul>
+            </div>
+
+            <h3 class="text-lg font-bold mt-6 text-amber-900">操作指令</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">crontab -e</span>
+<span class="cmd-comment"># Edit：編輯排程 (會打開 Vim)。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">crontab -l</span>
+<span class="cmd-comment"># List：列出排程。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">crontab -r</span>
+<span class="cmd-comment"># Remove：刪除所有排程 (小心使用！)。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-yellow-500 mt-12">
+                <h2 class="text-2xl font-bold text-amber-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：定時備份</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-amber-800">
+                    <li class="pl-2">
+                        <strong>設定一次性任務：</strong>
+                        <br>設定 2 分鐘後，將 "System check" 寫入 <code>/tmp/check.txt</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">at now + 2min</code> -> 輸入指令 -> Ctrl+D
+                    </li>
+                    <li class="pl-2">
+                        <strong>設定週期性任務：</strong>
+                        <br>使用 <code>crontab -e</code>。
+                        <br>設定每分鐘 (<code>* * * * *</code>) 將目前的日期 (<code>date</code>) <strong>累加</strong>寫入 <code>~/min_log.txt</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>驗證：</strong>
+                        <br>等待幾分鐘，使用 <code>tail -f ~/min_log.txt</code> 觀察檔案是否每分鐘都增加一行。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

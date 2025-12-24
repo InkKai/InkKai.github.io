@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打磚塊 - Kai Game Station</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        /* 讓畫布置中 */
+        .game-area {
+            position: relative;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        canvas {
+            background: #eee;
+            display: block;
+            margin: 0 auto;
+            border-radius: 5px;
+            border: 4px solid #4cc9f0;
+            box-shadow: 0 0 20px rgba(76, 201, 240, 0.2);
+            /* 讓 canvas 在手機上自適應 */
+            width: 100%;
+            height: auto;
+        }
+
+        button {
+            margin-top: 20px;
+        }
+
+        #msg {
+            color: #e94560;
+            font-weight: bold;
+            min-height: 24px;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🧱 霓虹打磚塊</h1>
+        <p>控制板子反彈球，擊碎所有磚塊！</p>
+    </header>
+
+    <div class="game-area">
+        <div id="msg">點擊畫面或按按鈕開始</div>
+        <canvas id="myCanvas" width="480" height="320"></canvas>
+        <button onclick="startGame()">▶️ 開始遊戲 / 重來</button>
+    </div>
+
+    <a href="../index.html" class="back-btn">⬅️ 回到遊戲大廳</a>
+
+    <script>
+        const canvas = document.getElementById("myCanvas");
+        const ctx = canvas.getContext("2d");
+        const msg = document.getElementById("msg");
+
+        // --- 遊戲參數 ---
+        let ballRadius = 10;
+        let x, y, dx, dy;
+        let paddleHeight = 10;
+        let paddleWidth = 75;
+        let paddleX;
+        
+        // 磚塊設定
+        let brickRowCount = 5; // 5排
+        let brickColumnCount = 6; // 6列
+        let brickWidth = 60;
+        let brickHeight = 20;
+        let brickPadding = 10;
+        let brickOffsetTop = 30;
+        let brickOffsetLeft = 35;
+        
+        let bricks = [];
+        let score = 0;
+        let lives = 3;
+        let gameRunning = false;
+        let animationId;
+
+        // 初始化磚塊陣列
+        function initBricks() {
+            bricks = [];
+            for(let c=0; c<brickColumnCount; c++) {
+                bricks[c] = [];
+                for(let r=0; r<brickRowCount; r++) {
+                    // status: 1代表存在，0代表被打掉
+                    bricks[c][r] = { x: 0, y: 0, status: 1 };
+                }
+            }
+        }
+
+        // 初始化遊戲變數
+        function resetGame() {
+            x = canvas.width / 2;
+            y = canvas.height - 30;
+            dx = 3; // 水平速度
+            dy = -3; // 垂直速度 (負數代表往上)
+            paddleX = (canvas.width - paddleWidth) / 2;
+            score = 0;
+            lives = 3;
+            initBricks();
+        }
+
+        // 監聽滑鼠移動
+        document.addEventListener("mousemove", mouseMoveHandler, false);
+        // 監聽觸控移動 (手機用)
+        document.addEventListener("touchmove", touchMoveHandler, {passive: false});
+
+        function mouseMoveHandler(e) {
+            const relativeX = e.clientX - canvas.offsetLeft;
+            if(relativeX > 0 && relativeX < canvas.width) {
+                paddleX = relativeX - paddleWidth/2;
+            }
+        }
+
+        function touchMoveHandler(e) {
+            e.preventDefault(); // 防止滾動畫面
+            const relativeX = e.touches[0].clientX - canvas.offsetLeft;
+            if(relativeX > 0 && relativeX < canvas.width) {
+                paddleX = relativeX - paddleWidth/2;
+            }
+        }
+
+        function drawBall() {
+            ctx.beginPath();
+            ctx.arc(x, y, ballRadius, 0, Math.PI*2);
+            ctx.fillStyle = "#e94560"; // 球的顏色
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawPaddle() {
+            ctx.beginPath();
+            ctx.rect(paddleX, canvas.height-paddleHeight, paddleWidth, paddleHeight);
+            ctx.fillStyle = "#4cc9f0"; // 板子顏色
+            ctx.fill();
+            ctx.closePath();
+        }
+
+        function drawBricks() {
+            for(let c=0; c<brickColumnCount; c++) {
+                for(let r=0; r<brickRowCount; r++) {
+                    if(bricks[c][r].status == 1) {
+                        let brickX = (c*(brickWidth+brickPadding)) + brickOffsetLeft;
+                        let brickY = (r*(brickHeight+brickPadding)) + brickOffsetTop;
+                        bricks[c][r].x = brickX;
+                        bricks[c][r].y = brickY;
+                        
+                        ctx.beginPath();
+                        ctx.rect(brickX, brickY, brickWidth, brickHeight);
+                        // 讓磚塊有漸層色
+                        ctx.fillStyle = `hsl(${c * 60}, 70%, 50%)`; 
+                        ctx.fill();
+                        ctx.closePath();
+                    }
+                }
+            }
+        }
+
+        function drawScore() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#0095DD";
+            ctx.fillText("Score: "+score, 8, 20);
+        }
+
+        function drawLives() {
+            ctx.font = "16px Arial";
+            ctx.fillStyle = "#0095DD";
+            ctx.fillText("Lives: "+lives, canvas.width-65, 20);
+        }
+
+        function collisionDetection() {
+            for(let c=0; c<brickColumnCount; c++) {
+                for(let r=0; r<brickRowCount; r++) {
+                    let b = bricks[c][r];
+                    if(b.status == 1) {
+                        // 簡單的矩形碰撞偵測
+                        if(x > b.x && x < b.x+brickWidth && y > b.y && y < b.y+brickHeight) {
+                            dy = -dy; // 反彈
+                            b.status = 0; // 磚塊消失
+                            score++;
+                            if(score == brickRowCount*brickColumnCount) {
+                                alert("🎉 恭喜過關！你太強了！");
+                                document.location.reload();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            // 清空畫布
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            drawBricks();
+            drawBall();
+            drawPaddle();
+            drawScore();
+            drawLives();
+            collisionDetection();
+
+            // 邊界反彈邏輯
+            if(x + dx > canvas.width-ballRadius || x + dx < ballRadius) {
+                dx = -dx;
+            }
+            if(y + dy < ballRadius) {
+                dy = -dy;
+            } else if(y + dy > canvas.height-ballRadius) {
+                // 碰到下面 (檢查有沒有接到)
+                if(x > paddleX && x < paddleX + paddleWidth) {
+                    dy = -dy;
+                    // 加一點點速度讓遊戲變刺激
+                    dy = dy * 1.05; 
+                }
+                else {
+                    lives--;
+                    if(!lives) {
+                        // 輸了
+                        msg.innerText = "💀 遊戲結束！";
+                        gameRunning = false;
+                        cancelAnimationFrame(animationId);
+                        return;
+                    }
+                    else {
+                        // 還有命，重置球的位置
+                        x = canvas.width/2;
+                        y = canvas.height-30;
+                        dx = 3;
+                        dy = -3;
+                        paddleX = (canvas.width-paddleWidth)/2;
+                    }
+                }
+            }
+
+            x += dx;
+            y += dy;
+
+            if(gameRunning) {
+                animationId = requestAnimationFrame(draw);
+            }
+        }
+
+        function startGame() {
+            if (gameRunning) return; // 避免重複按
+            resetGame();
+            gameRunning = true;
+            msg.innerText = "🔥 遊戲進行中...";
+            draw();
+        }
+        
+        // 預覽畫面 (先畫一次不動的)
+        resetGame();
+        drawBricks();
+        drawPaddle();
+        drawScore();
+        drawLives();
+        // 畫球在中間
+        ctx.beginPath();
+        ctx.arc(canvas.width/2, canvas.height-30, ballRadius, 0, Math.PI*2);
+        ctx.fillStyle = "#e94560";
+        ctx.fill();
+        ctx.closePath();
+
+    </script>
+</body>
+</html>

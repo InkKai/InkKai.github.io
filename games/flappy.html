@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>飛翔小鳥 - Kai Game Station</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .game-area {
+            position: relative;
+            max-width: 320px; /* 窄版設計比較像原作 */
+            margin: 0 auto;
+        }
+
+        canvas {
+            background-color: #70c5ce; /* 經典的天空藍 */
+            display: block;
+            margin: 0 auto;
+            border: 4px solid #543847;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            width: 100%;
+            height: auto;
+        }
+
+        /* 開始/結束畫面 */
+        .overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 80%;
+            pointer-events: none; /* 讓點擊穿透到 Canvas */
+        }
+
+        .message {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+            background: rgba(0,0,0,0.5);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        #score-display {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 3rem;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 0 #000;
+            z-index: 10;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🐦 飛翔小鳥</h1>
+        <p>點擊螢幕或按空白鍵飛行</p>
+    </header>
+
+    <div class="game-area">
+        <div id="score-display">0</div>
+        
+        <div class="overlay" id="startMsg">
+            <div class="message">點擊開始<br>Click to Start</div>
+        </div>
+
+        <canvas id="gameCanvas" width="320" height="480"></canvas>
+    </div>
+
+    <a href="../index.html" class="back-btn">⬅️ 回到遊戲大廳</a>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score-display');
+        const startMsg = document.getElementById('startMsg');
+
+        // 遊戲狀態
+        let frames = 0;
+        let score = 0;
+        let state = {
+            current: 0,
+            getReady: 0,
+            game: 1,
+            over: 2
+        };
+
+        // 載入圖片 (使用 Base64 以免圖檔遺失)
+        // 這裡我們直接用 canvas 畫簡單圖形代替圖片，確保一定能跑
+        
+        // --- 遊戲物件 ---
+
+        const bird = {
+            x: 50,
+            y: 150,
+            radius: 12,
+            velocity: 0,
+            gravity: 0.25,
+            jump: 4.6,
+            
+            draw: function() {
+                ctx.fillStyle = "#ffeb3b"; // 黃色小鳥
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI*2);
+                ctx.fill();
+                
+                // 眼睛
+                ctx.fillStyle = "#fff";
+                ctx.beginPath();
+                ctx.arc(this.x+6, this.y-6, 4, 0, Math.PI*2);
+                ctx.fill();
+                ctx.fillStyle = "#000";
+                ctx.beginPath();
+                ctx.arc(this.x+8, this.y-6, 1.5, 0, Math.PI*2);
+                ctx.fill();
+                
+                // 嘴巴
+                ctx.fillStyle = "#f44336";
+                ctx.beginPath();
+                ctx.arc(this.x+6, this.y+2, 4, 0, Math.PI*2);
+                ctx.fill();
+            },
+            
+            update: function() {
+                // 如果是遊戲中，鳥會受重力影響
+                if(state.current === state.game) {
+                    this.velocity += this.gravity;
+                    this.y += this.velocity;
+                    
+                    // 撞到地板
+                    if(this.y + this.radius >= canvas.height - fg.h) {
+                        this.y = canvas.height - fg.h - this.radius;
+                        state.current = state.over;
+                        startMsg.innerHTML = `<div class="message">GAME OVER<br>Score: ${score}<br>點擊重來</div>`;
+                        startMsg.style.display = 'block';
+                    }
+                    
+                    // 撞到天花板 (防止飛出去)
+                    if(this.y - this.radius <= 0) {
+                        this.y = this.radius;
+                        this.velocity = 0;
+                    }
+                } else if (state.current === state.getReady) {
+                    // 準備畫面時，鳥會上下浮動
+                    this.y = 150 + Math.cos(frames/10) * 5;
+                }
+            },
+            
+            flap: function() {
+                this.velocity = -this.jump;
+            },
+
+            reset: function() {
+                this.y = 150;
+                this.velocity = 0;
+            }
+        };
+
+        const bg = {
+            draw: function() {
+                ctx.fillStyle = "#70c5ce";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // 遠處的雲
+                ctx.fillStyle = "#e0f7fa";
+                ctx.beginPath();
+                ctx.arc(100, 300, 30, 0, Math.PI*2);
+                ctx.arc(140, 320, 40, 0, Math.PI*2);
+                ctx.arc(180, 300, 30, 0, Math.PI*2);
+                ctx.fill();
+            }
+        };
+
+        const fg = {
+            h: 112,
+            x: 0,
+            dx: 2,
+            draw: function() {
+                ctx.fillStyle = "#ded895";
+                ctx.fillRect(this.x, canvas.height - this.h, canvas.width, this.h);
+                ctx.fillRect(this.x + canvas.width, canvas.height - this.h, canvas.width, this.h);
+                
+                // 草地裝飾
+                ctx.fillStyle = "#73bf2e";
+                ctx.fillRect(this.x, canvas.height - this.h, canvas.width, 12);
+                ctx.fillRect(this.x + canvas.width, canvas.height - this.h, canvas.width, 12);
+            },
+            update: function() {
+                if(state.current === state.game) {
+                    this.x = (this.x - this.dx) % (canvas.width);
+                }
+            }
+        };
+
+        const pipes = {
+            position: [],
+            w: 52,
+            h: 400,
+            gap: 100, // 上下管子的間距
+            dx: 2,
+            maxYPos: -150,
+            
+            draw: function() {
+                for(let i = 0; i < this.position.length; i++) {
+                    let p = this.position[i];
+                    let topY = p.y;
+                    let bottomY = p.y + this.h + this.gap;
+                    
+                    // 畫上管
+                    ctx.fillStyle = "#73bf2e"; // 綠色水管
+                    ctx.fillRect(p.x, topY, this.w, this.h);
+                    ctx.fillStyle = "#558c22"; // 邊框
+                    ctx.strokeRect(p.x, topY, this.w, this.h);
+                    
+                    // 畫下管
+                    ctx.fillStyle = "#73bf2e";
+                    ctx.fillRect(p.x, bottomY, this.w, this.h);
+                    ctx.fillStyle = "#558c22";
+                    ctx.strokeRect(p.x, bottomY, this.w, this.h);
+                }
+            },
+            
+            update: function() {
+                if(state.current !== state.game) return;
+                
+                // 每 100 幀產生一支新水管
+                if(frames % 100 === 0) {
+                    this.position.push({
+                        x: canvas.width,
+                        y: this.maxYPos * (Math.random() + 1)
+                    });
+                }
+                
+                for(let i = 0; i < this.position.length; i++) {
+                    let p = this.position[i];
+                    p.x -= this.dx;
+                    
+                    // 碰撞偵測
+                    let bottomPipeY = p.y + this.h + this.gap;
+                    
+                    // 撞到上管 或 撞到下管
+                    if(bird.x + bird.radius > p.x && bird.x - bird.radius < p.x + this.w && 
+                       (bird.y - bird.radius < p.y + this.h || bird.y + bird.radius > bottomPipeY)) {
+                        state.current = state.over;
+                        startMsg.innerHTML = `<div class="message">OUCH!<br>Score: ${score}<br>點擊重來</div>`;
+                        startMsg.style.display = 'block';
+                    }
+                    
+                    // 通過水管加分
+                    if(p.x + this.w <= bird.x - bird.radius && p.x + this.w + this.dx >= bird.x - bird.radius) {
+                        score++;
+                        scoreEl.innerText = score;
+                    }
+                    
+                    // 移除超出螢幕的水管
+                    if(p.x + this.w <= 0) {
+                        this.position.shift();
+                        // 修正索引因為陣列變短
+                        i--;
+                    }
+                }
+            },
+            
+            reset: function() {
+                this.position = [];
+            }
+        };
+
+        // --- 遊戲控制 ---
+
+        function loop() {
+            bg.draw();
+            pipes.draw();
+            pipes.update();
+            fg.draw();
+            fg.update();
+            bird.draw();
+            bird.update();
+            
+            frames++;
+            requestAnimationFrame(loop);
+        }
+
+        // 點擊事件
+        window.addEventListener("click", function(evt) {
+            switch(state.current) {
+                case state.getReady:
+                    state.current = state.game;
+                    startMsg.style.display = 'none';
+                    break;
+                case state.game:
+                    bird.flap();
+                    break;
+                case state.over:
+                    bird.reset();
+                    pipes.reset();
+                    score = 0;
+                    scoreEl.innerText = score;
+                    state.current = state.getReady;
+                    startMsg.innerHTML = `<div class="message">點擊開始<br>Click to Start</div>`;
+                    startMsg.style.display = 'block';
+                    break;
+            }
+        });
+
+        // 鍵盤事件 (空白鍵)
+        window.addEventListener("keydown", function(evt) {
+            if(evt.code === "Space") {
+                switch(state.current) {
+                    case state.getReady:
+                        state.current = state.game;
+                        startMsg.style.display = 'none';
+                        break;
+                    case state.game:
+                        bird.flap();
+                        break;
+                    case state.over:
+                        bird.reset();
+                        pipes.reset();
+                        score = 0;
+                        scoreEl.innerText = score;
+                        state.current = state.getReady;
+                        startMsg.innerHTML = `<div class="message">點擊開始<br>Click to Start</div>`;
+                        startMsg.style.display = 'block';
+                        break;
+                }
+            }
+        });
+
+        loop();
+    </script>
+</body>
+</html>

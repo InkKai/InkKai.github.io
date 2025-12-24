@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜數字 - Kai Game Station</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>🔢 猜數字大挑戰</h1>
+        <p>電腦選了一個 1 ~ 100 的數字，試著猜中它！</p>
+    </header>
+
+    <div class="game-area">
+        <p>請輸入你的猜測：</p>
+        <input type="number" id="userGuess" placeholder="?" min="1" max="100">
+        <br>
+        <button onclick="checkGuess()">猜！</button>
+        <button onclick="restartGame()" style="background-color: #444;">重置</button>
+
+        <p id="result"></p>
+    </div>
+
+    <a href="../index.html" class="back-btn">⬅️ 回到遊戲大廳</a>
+
+    <script>
+        // --- 遊戲邏輯 ---
+        
+        // 1. 產生隨機數字
+        let randomNumber = Math.floor(Math.random() * 100) + 1;
+        let attempts = 0; // 記錄猜了幾次
+
+        const resultText = document.getElementById('result');
+        const guessInput = document.getElementById('userGuess');
+
+        function checkGuess() {
+            const userValue = Number(guessInput.value);
+            attempts++;
+
+            if (!userValue) {
+                resultText.innerText = "⚠️ 請輸入數字！";
+                resultText.style.color = "yellow";
+                return;
+            }
+
+            if (userValue === randomNumber) {
+                resultText.innerHTML = `🎉 恭喜！你猜對了！<br>答案是 ${randomNumber} (用了 ${attempts} 次)`;
+                resultText.style.color = "#4cc9f0"; // 藍色
+            } else if (userValue > randomNumber) {
+                resultText.innerText = "太大了！再小一點 👇";
+                resultText.style.color = "#ff2e63"; // 紅色
+            } else {
+                resultText.innerText = "太小了！再大一點 👆";
+                resultText.style.color = "#ff2e63"; // 紅色
+            }
+            
+            // 清空輸入框，方便下次輸入
+            guessInput.value = '';
+            guessInput.focus();
+        }
+
+        function restartGame() {
+            randomNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            resultText.innerText = "遊戲已重置，請開始！";
+            resultText.style.color = "white";
+            guessInput.value = '';
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>機器人服務 | CloudStay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .container {
+            width: 100%;
+            max-width: 400px;
+            margin-top: 50px;
+        }
+
+        /* 商品列表 */
+        .items-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .item-card {
+            background: white;
+            padding: 20px;
+            border-radius: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border: 2px solid transparent;
+        }
+
+        .item-card:hover {
+            transform: translateY(-5px);
+            border-color: #3498db;
+        }
+
+        .item-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+
+        .item-name { font-weight: bold; color: #333; }
+        .item-price { color: #888; font-size: 0.9rem; margin-top: 5px; }
+
+        /* --- 追蹤面板 (預設隱藏) --- */
+        .tracking-panel {
+            position: fixed;
+            bottom: 0; left: 0; right: 0;
+            background: white;
+            border-radius: 30px 30px 0 0;
+            padding: 30px;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+            transform: translateY(100%); /* 收起來 */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 100;
+        }
+
+        .tracking-panel.active {
+            transform: translateY(0); /* 彈出來 */
+        }
+
+        .robot-status {
+            text-align: center;
+        }
+
+        .robot-icon {
+            font-size: 3rem;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        .status-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 5px; }
+        .status-desc { color: #888; font-size: 0.9rem; margin-bottom: 20px; }
+
+        /* 進度條 */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #eee;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2ed573;
+            width: 0%;
+            transition: width 0.5s;
+        }
+
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+        
+        /* JS 會加這個 class */
+        .steps span.active { color: #2ed573; font-weight: bold; }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
+
+    <div class="container">
+        <h2>呼叫服務</h2>
+        <p style="color:#666; margin-bottom:20px;">由 AI 機器人為您配送</p>
+
+        <div class="items-grid">
+            <div class="item-card" onclick="order('礦泉水')">
+                <div class="item-icon"><i class="fa-solid fa-bottle-water"></i></div>
+                <div class="item-name">礦泉水</div>
+                <div class="item-price">免費</div>
+            </div>
+            <div class="item-card" onclick="order('毛巾組')">
+                <div class="item-icon"><i class="fa-solid fa-rug"></i></div>
+                <div class="item-name">毛巾組</div>
+                <div class="item-price">免費</div>
+            </div>
+            <div class="item-card" onclick="order('牙刷備品')">
+                <div class="item-icon"><i class="fa-solid fa-pump-soap"></i></div>
+                <div class="item-name">盥洗備品</div>
+                <div class="item-price">免費</div>
+            </div>
+            <div class="item-card" onclick="order('總匯三明治')">
+                <div class="item-icon"><i class="fa-solid fa-burger"></i></div>
+                <div class="item-name">總匯三明治</div>
+                <div class="item-price">$250</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tracking-panel" id="trackPanel">
+        <div class="robot-status">
+            <div class="robot-icon"><i class="fa-solid fa-robot"></i></div>
+            <div class="status-title" id="statusTitle">訂單確認中...</div>
+            <div class="status-desc" id="statusDesc">機器人正在準備您的物品</div>
+            
+            <div class="progress-bar">
+                <div class="progress-fill" id="progFill"></div>
+            </div>
+
+            <div class="steps">
+                <span id="step1">接單</span>
+                <span id="step2">取物</span>
+                <span id="step3">搭梯</span>
+                <span id="step4">送達</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/service.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 22：Playbook 基礎 | RHCE 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; color: #0c4a6e; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #0ea5e9; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #38bdf8; border-left-color: #0ea5e9; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0c4a6e; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #0369a1; border-bottom: 2px solid #bae6fd; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #0ea5e9; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e0f2fe; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #0ea5e9; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #38bdf8; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #7dd3fc; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f0f9ff; text-align: left; padding: 1rem; border-bottom: 2px solid #7dd3fc; font-weight: 700; color: #0369a1; }
+        td { padding: 1rem; border-bottom: 1px solid #bae6fd; vertical-align: top; }
+        .analogy-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0ea5e9; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCE 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 3: RH294 自動化</p>
+        </div>
+        <div class="py-4">
+            <a href="#yaml" class="nav-item"><span class="nav-icon">01</span> YAML 語法地獄</a>
+            <a href="#playbook" class="nav-item"><span class="nav-icon">02</span> Playbook 結構</a>
+            <a href="#idempotent" class="nav-item"><span class="nav-icon">03</span> 冪等性 (Idempotency)</a>
+            <a href="#run" class="nav-item"><span class="nav-icon">04</span> 執行劇本</a>
+            <a href="#lab" class="nav-item" style="color:#38bdf8;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 22</span>
+                <span class="text-blue-800 font-mono text-sm">RH294 Unit 3</span>
+            </div>
+            <h1>劇本第一章：Playbook 與 YAML</h1>
+            <p class="text-xl text-sky-900 max-w-3xl leading-relaxed">
+                Ad-Hoc 雖然方便，但不能重複使用。如果要管理複雜的伺服器，我們需要「劇本 (Playbook)」。今天我們要挑戰新手最容易卡關的大魔王——YAML 縮排。
+            </p>
+        </header>
+
+        <!-- 1. YAML -->
+        <section id="yaml">
+            <h2><span class="section-num">1</span> YAML 語法：縮排就是生命</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-sky-700 text-lg mb-2">📜 大綱筆記的比喻</h4>
+                <p class="text-slate-700">
+                    YAML 就像我們寫筆記的縮排大綱：
+                    <br>1. 第一層
+                    <br>&nbsp;&nbsp;1.1 第二層 (前面空兩格)
+                    <br>&nbsp;&nbsp;1.2 第二層
+                    <br><strong>規則：</strong>
+                    <br>1. <strong>絕對不能用 Tab 鍵！</strong> 只能用空白鍵 (Space)。
+                    <br>2. 每一層縮排通常是 <strong>2 個空白鍵</strong>。
+                    <br>3. 列表 (List) 用 <code>-</code> 開頭。
+                    <br>4. 鍵值對 (Key-Value) 用 <code>:</code> 分隔。
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. Playbook Structure -->
+        <section id="playbook">
+            <h2><span class="section-num">2</span> Playbook 解剖學</h2>
+            <p class="mb-4 text-slate-600">一個 Playbook (`.yml`) 包含一個或多個 <strong>Play</strong> (劇目)，每個 Play 包含多個 <strong>Task</strong> (任務)。</p>
+
+            <div class="cmd-block text-sm">
+<span class="cmd-input">---</span>
+<span class="cmd-input">- name: Configure Web Server</span> <span class="cmd-comment"># Play 的名稱</span>
+<span class="cmd-input">  hosts: webservers</span> <span class="cmd-comment"># 對象：這齣戲要演給誰看？</span>
+<span class="cmd-input">  tasks:</span>
+<span class="cmd-input">    - name: Install httpd</span> <span class="cmd-comment"># Task 1: 安裝</span>
+<span class="cmd-input">      ansible.builtin.dnf:</span> <span class="cmd-comment"># 使用 dnf 模組</span>
+<span class="cmd-input">        name: httpd</span>
+<span class="cmd-input">        state: present</span>
+
+<span class="cmd-input">    - name: Start service</span> <span class="cmd-comment"># Task 2: 啟動</span>
+<span class="cmd-input">      ansible.builtin.service:</span> <span class="cmd-comment"># 使用 service 模組</span>
+<span class="cmd-input">        name: httpd</span>
+<span class="cmd-input">        state: started</span>
+<span class="cmd-input">        enabled: true</span>
+            </div>
+        </section>
+
+        <!-- 3. Idempotency -->
+        <section id="idempotent">
+            <h2><span class="section-num">3</span> 冪等性 (Idempotency)</h2>
+            <p class="mb-4 text-slate-600">
+                這是 Ansible 的靈魂。
+                <br>如果你執行上面的劇本 100 次：
+                <br>第 1 次：Ansible 會安裝 httpd 並啟動它 (Changed)。
+                <br>第 2~100 次：Ansible 會檢查發現已經裝好且啟動了，所以<strong>什麼都不做</strong> (OK)。
+                <br><strong>結果永遠保證是一樣的。</strong>
+            </p>
+        </section>
+
+        <!-- 4. Run -->
+        <section id="run">
+            <h2><span class="section-num">4</span> 執行劇本</h2>
+            <p class="mb-4 text-slate-600">寫好檔案 (例如 <code>web.yml</code>) 後，怎麼跑？</p>
+
+            <h3 class="font-bold text-sky-800 mt-4">1. 語法檢查 (Syntax Check)</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible-playbook --syntax-check web.yml</span>
+<span class="cmd-comment"># 沒消息就是好消息。如果有錯，它會告訴你在第幾行。</span>
+            </div>
+
+            <h3 class="font-bold text-sky-800 mt-4">2. 正式執行</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible-playbook web.yml</span>
+            </div>
+
+            <h3 class="font-bold text-sky-800 mt-4">3. 模擬執行 (Dry Run)</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible-playbook -C web.yml</span>
+<span class="cmd-comment"># -C (Check): 假裝跑一次，告訴你會改變什麼，但不會真的動手。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-sky-500 mt-12">
+                <h2 class="text-2xl font-bold text-sky-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：第一個劇本</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-sky-800">
+                    <li class="pl-2">
+                        <strong>準備環境：</strong>
+                        <br>進入昨天的 <code>~/ansible-lab</code> 目錄。
+                    </li>
+                    <li class="pl-2">
+                        <strong>撰寫 Playbook：</strong>
+                        <br>建立 <code>first_play.yml</code>。
+                        <br>內容：對 <code>all</code> 主機，使用 <code>dnf</code> 模組安裝 <code>vim</code>，使用 <code>user</code> 模組建立使用者 <code>ansible_user</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>檢查語法：</strong>
+                        <br>使用 <code>--syntax-check</code> 確認你的縮排沒有錯。
+                    </li>
+                    <li class="pl-2">
+                        <strong>執行與驗證：</strong>
+                        <br>執行劇本。
+                        <br>再次執行劇本，觀察 output 顏色變化 (綠色代表沒變，黃色代表有變)。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

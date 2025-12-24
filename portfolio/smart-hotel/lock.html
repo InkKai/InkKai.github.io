@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧雲端門鎖</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        .container {
+            width: 300px; /* 稍微窄一點比較好看 */
+            padding: 40px;
+        }
+
+        /* 鎖頭按鈕本體 */
+        .lock-btn {
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 4rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 彈跳效果 */
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 auto 30px auto; /* 置中 */
+            outline: none;
+        }
+
+        .lock-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 上鎖狀態 (紅色) */
+        .lock-btn.locked {
+            background: linear-gradient(135deg, #ff6b6b, #ee5253);
+            box-shadow: 0 10px 25px rgba(238, 82, 83, 0.4);
+        }
+
+        /* 解鎖狀態 (綠色) */
+        .lock-btn.unlocked {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+            box-shadow: 0 10px 25px rgba(16, 172, 132, 0.4);
+        }
+
+        /* 連線中 (讀取動畫) */
+        .lock-btn.loading {
+            animation: pulse 1s infinite;
+            cursor: wait;
+            opacity: 0.8;
+        }
+
+        /* 狀態文字 */
+        .status-text {
+            font-size: 1.2rem;
+            color: #555;
+            font-weight: bold;
+            min-height: 1.5em; /* 預留高度避免文字跳動 */
+        }
+
+        /* 呼吸燈動畫 */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.95); opacity: 0.7; }
+            100% { transform: scale(1); }
+        }
+
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="container">
+        <h2>門鎖控制</h2>
+
+        <button id="lockBtn" class="lock-btn locked" onclick="toggleLock()">
+            <i id="icon" class="fa-solid fa-lock"></i>
+        </button>
+
+        <p class="status-text" id="statusText">已上鎖</p>
+    </div>
+
+    <script src="js/lock.js"></script>
+    
+</body>
+</html>

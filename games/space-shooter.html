@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>星際射擊 - Kai Game Station</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <style>
+        .game-area {
+            position: relative;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        canvas {
+            background: #000 url('https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60') center/cover no-repeat;
+            display: block;
+            margin: 0 auto;
+            border: 2px solid #4cc9f0;
+            box-shadow: 0 0 15px rgba(76, 201, 240, 0.4);
+            width: 100%;
+            height: auto;
+        }
+
+        /* 介面層 */
+        .ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            pointer-events: none;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        /* 手機控制區 */
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid #4cc9f0;
+            color: #4cc9f0;
+            padding: 15px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            user-select: none; /* 防止選取文字 */
+        }
+        
+        .btn:active {
+            background: #4cc9f0;
+            color: #000;
+        }
+
+        .shoot-btn {
+            border-color: #e94560;
+            color: #e94560;
+        }
+
+        .shoot-btn:active {
+            background: #e94560;
+            color: #fff;
+        }
+
+        #startScreen {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border: 1px solid #4cc9f0;
+            border-radius: 10px;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🚀 星際射擊戰</h1>
+        <p>保衛地球！消滅入侵的外星軍團！</p>
+    </header>
+
+    <div class="game-area">
+        <div class="ui-layer">
+            <div>SCORE: <span id="score">0</span></div>
+            <div>HP: <span id="hp">100%</span></div>
+        </div>
+
+        <div id="startScreen">
+            <h2>READY PILOT?</h2>
+            <p>電腦：左右鍵移動 / 空白鍵射擊</p>
+            <p>手機：使用下方按鈕</p>
+            <button onclick="startGame()" style="margin-top:10px;">🚀 出擊！</button>
+        </div>
+
+        <canvas id="gameCanvas" width="480" height="600"></canvas>
+
+        <div class="controls">
+            <div class="btn" id="leftBtn">⬅️</div>
+            <div class="btn shoot-btn" id="fireBtn">💥</div>
+            <div class="btn" id="rightBtn">➡️</div>
+        </div>
+    </div>
+
+    <a href="../index.html" class="back-btn">⬅️ 回到遊戲大廳</a>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreEl = document.getElementById('score');
+        const hpEl = document.getElementById('hp');
+        const startScreen = document.getElementById('startScreen');
+
+        // 遊戲變數
+        let score = 0;
+        let hp = 100;
+        let gameRunning = false;
+        let frameCount = 0;
+
+        // 玩家飛船
+        const player = {
+            x: canvas.width / 2 - 25,
+            y: canvas.height - 80,
+            width: 50,
+            height: 50,
+            speed: 5,
+            dx: 0,
+            emoji: '🚀'
+        };
+
+        // 陣列
+        let bullets = [];
+        let enemies = [];
+        let particles = []; // 爆炸碎片
+
+        // 監聽鍵盤
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') player.dx = -player.speed;
+            if (e.key === 'ArrowRight') player.dx = player.speed;
+            if (e.key === ' ' && gameRunning) shoot();
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') player.dx = 0;
+        });
+
+        // 監聽手機按鈕 (觸控)
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const fireBtn = document.getElementById('fireBtn');
+
+        // 左鍵
+        leftBtn.addEventListener('touchstart', (e) => { e.preventDefault(); player.dx = -player.speed; });
+        leftBtn.addEventListener('touchend', (e) => { e.preventDefault(); player.dx = 0; });
+        
+        // 右鍵
+        rightBtn.addEventListener('touchstart', (e) => { e.preventDefault(); player.dx = player.speed; });
+        rightBtn.addEventListener('touchend', (e) => { e.preventDefault(); player.dx = 0; });
+
+        // 發射鍵
+        fireBtn.addEventListener('touchstart', (e) => { 
+            e.preventDefault(); 
+            if(gameRunning) shoot(); 
+            fireBtn.style.transform = "scale(0.9)";
+        });
+        fireBtn.addEventListener('touchend', () => fireBtn.style.transform = "scale(1)");
+
+        // 核心功能
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            hp = 100;
+            bullets = [];
+            enemies = [];
+            particles = [];
+            player.x = canvas.width / 2 - 25;
+            
+            scoreEl.innerText = score;
+            hpEl.innerText = hp + "%";
+            startScreen.style.display = 'none';
+            
+            gameLoop();
+        }
+
+        function shoot() {
+            bullets.push({
+                x: player.x + player.width / 2 - 4,
+                y: player.y,
+                width: 8,
+                height: 20,
+                speed: 10,
+                color: '#e94560'
+            });
+        }
+
+        function spawnEnemy() {
+            const size = Math.random() * 30 + 30; // 30~60px
+            const x = Math.random() * (canvas.width - size);
+            enemies.push({
+                x: x,
+                y: -size,
+                width: size,
+                height: size,
+                speed: Math.random() * 2 + 1 + (score/500), // 分數越高越快
+                emoji: ['👾', '🛸', '🕷️', '💀'][Math.floor(Math.random() * 4)],
+                hp: Math.floor(score/200) + 1 // 分數越高血越厚
+            });
+        }
+
+        function createExplosion(x, y, color) {
+            for(let i=0; i<8; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    life: 1.0,
+                    color: color
+                });
+            }
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            frameCount++;
+
+            // 1. 更新與繪製玩家
+            player.x += player.dx;
+            // 邊界限制
+            if(player.x < 0) player.x = 0;
+            if(player.x + player.width > canvas.width) player.x = canvas.width - player.width;
+
+            ctx.font = "40px Arial";
+            ctx.fillText(player.emoji, player.x, player.y + 40);
+
+            // 2. 更新子彈
+            bullets.forEach((b, index) => {
+                b.y -= b.speed;
+                ctx.fillStyle = b.color;
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+                
+                // 超出邊界移除
+                if (b.y < 0) setTimeout(() => bullets.splice(index, 1), 0);
+            });
+
+            // 3. 產生敵人
+            if (frameCount % 60 === 0) spawnEnemy();
+
+            // 4. 更新敵人
+            enemies.forEach((enemy, eIndex) => {
+                enemy.y += enemy.speed;
+                ctx.font = `${enemy.width}px Arial`;
+                ctx.fillText(enemy.emoji, enemy.x, enemy.y + enemy.height);
+
+                // 檢測子彈擊中
+                bullets.forEach((b, bIndex) => {
+                    if (b.x < enemy.x + enemy.width &&
+                        b.x + b.width > enemy.x &&
+                        b.y < enemy.y + enemy.height &&
+                        b.height + b.y > enemy.y) {
+                            
+                        // 擊中！
+                        bullets.splice(bIndex, 1);
+                        enemy.hp--;
+                        
+                        // 敵人死亡
+                        if(enemy.hp <= 0) {
+                            createExplosion(enemy.x + enemy.width/2, enemy.y + enemy.height/2, '#e94560');
+                            enemies.splice(eIndex, 1);
+                            score += 10;
+                            scoreEl.innerText = score;
+                        } else {
+                            // 擊中特效
+                            createExplosion(b.x, b.y, '#fff');
+                        }
+                    }
+                });
+
+                // 撞到玩家
+                if (enemy.x < player.x + player.width &&
+                    enemy.x + enemy.width > player.x &&
+                    enemy.y < player.y + player.height &&
+                    enemy.height + enemy.y > player.y) {
+                        
+                    hp -= 20;
+                    hpEl.innerText = hp + "%";
+                    createExplosion(player.x + 25, player.y + 25, 'red');
+                    enemies.splice(eIndex, 1);
+
+                    if(hp <= 0) gameOver();
+                }
+
+                // 超出底部
+                if (enemy.y > canvas.height) {
+                    enemies.splice(eIndex, 1);
+                    // 漏掉敵人也要扣一點分或血? 這裡暫時不扣
+                }
+            });
+
+            // 5. 更新粒子
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.05;
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 3, 0, Math.PI*2);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+                if(p.life <= 0) particles.splice(index, 1);
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            startScreen.style.display = 'block';
+            startScreen.innerHTML = `
+                <h2 style="color:#e94560">任務失敗</h2>
+                <p>最終得分：${score}</p>
+                <button onclick="startGame()">🔄 重新挑戰</button>
+            `;
+        }
+    </script>
+</body>
+</html>

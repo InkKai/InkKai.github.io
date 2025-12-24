@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 19：開機救援 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffbeb; color: #451a03; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #1e1e1e; color: #d4d4d4; overflow-y: auto; z-index: 50; border-right: 1px solid #451a03; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #451a03; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #fcd34d; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #a3a3a3; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #292524; color: #fcd34d; border-left-color: #f59e0b; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #78350f; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #92400e; border-bottom: 2px solid #fde68a; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #fbbf24; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #f59e0b; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fcd34d; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #fcd34d; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #fff7ed; text-align: left; padding: 1rem; border-bottom: 2px solid #fcd34d; font-weight: 700; color: #92400e; }
+        td { padding: 1rem; border-bottom: 1px solid #fde68a; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #ea580c; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 2: RH134 進階篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#boot" class="nav-item"><span class="nav-icon">01</span> 開機流程</a>
+            <a href="#reset" class="nav-item"><span class="nav-icon">02</span> 重設 Root 密碼 (必考)</a>
+            <a href="#targets" class="nav-item"><span class="nav-icon">03</span> Systemd Targets</a>
+            <a href="#lab" class="nav-item" style="color:#fcd34d;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold tracking-widest">DAY 19</span>
+                <span class="text-amber-700 font-mono text-sm">RH134 Unit 10</span>
+            </div>
+            <h1>開機流程與救援：忘記密碼怎麼辦？</h1>
+            <p class="text-xl text-amber-900 max-w-3xl leading-relaxed">
+                這是最刺激的一課。當你忘記 Root 密碼，或者系統開不起來時，你需要進入「緊急模式」動手術。這是成為駭客（誤）的第一步。
+            </p>
+        </header>
+
+        <!-- 1. Boot -->
+        <section id="boot">
+            <h2><span class="section-num">1</span> 開機四部曲</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🌅 起床儀式</h4>
+                <ol class="list-decimal list-inside space-y-2 text-slate-700">
+                    <li><strong>BIOS/UEFI</strong>：鬧鐘響了，通電，檢查硬體。</li>
+                    <li><strong>Bootloader (Grub2)</strong>：決定要穿哪件衣服（選哪個 Kernel）。在這個階段我們可以攔截開機流程！</li>
+                    <li><strong>Kernel</strong>：大腦清醒，掛載 <code>/</code> 根目錄 (唯讀)。</li>
+                    <li><strong>Systemd</strong>：總管起床，開始叫醒其他服務 (Services)。</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- 2. Reset Password -->
+        <section id="reset">
+            <h2><span class="section-num">2</span> 實戰：重設 Root 密碼</h2>
+            <p class="mb-4 text-amber-900">RHCSA 考試第一題通常就是這個：你無法登入 Root，請重設密碼。</p>
+
+            <div class="bg-white p-6 rounded shadow border border-amber-200">
+                <h4 class="font-bold text-lg mb-4">操作步驟 (背下來！)</h4>
+                <ol class="list-decimal list-inside space-y-4 text-slate-700">
+                    <li>重開機，在 Grub 選單畫面按 <strong><code>e</code></strong> (Edit)。</li>
+                    <li>找到 <code>linux</code> 開頭的那一行 (很長)。</li>
+                    <li>
+                        在該行最後面加上 <strong><code>rd.break</code></strong>。
+                        <br><span class="text-sm text-slate-500">(這會讓開機停在切換 root 之前)</span>
+                    </li>
+                    <li>按 <strong><code>Ctrl + x</code></strong> 啟動。</li>
+                    <li>
+                        <strong>重新掛載硬碟為可寫：</strong>
+                        <div class="cmd-block my-2 p-2">mount -o remount,rw /sysroot</div>
+                    </li>
+                    <li>
+                        <strong>切換環境 (Chroot)：</strong>
+                        <div class="cmd-block my-2 p-2">chroot /sysroot</div>
+                        <span class="text-sm text-slate-500">現在你是真的 Root 了。</span>
+                    </li>
+                    <li>
+                        <strong>改密碼：</strong>
+                        <div class="cmd-block my-2 p-2">passwd root</div>
+                    </li>
+                    <li>
+                        <strong>★ 關鍵一步：SELinux 重貼標籤</strong>
+                        <div class="cmd-block my-2 p-2">touch /.autorelabel</div>
+                        <span class="text-sm text-red-600 font-bold">沒做這步，開機後還是進不去！</span>
+                    </li>
+                    <li>輸入兩次 <code>exit</code> 重開機。</li>
+                </ol>
+            </div>
+        </section>
+
+        <!-- 3. Targets -->
+        <section id="targets">
+            <h2><span class="section-num">3</span> Systemd Targets (Runlevels)</h2>
+            <p class="mb-4 text-amber-900">決定開機後要進入什麼模式。</p>
+
+            <table>
+                <tr>
+                    <th class="w-1/3">Target</th>
+                    <th>用途</th>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">multi-user.target</td>
+                    <td><strong>多使用者文字模式</strong> (以前的 Runlevel 3)。伺服器預設。</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-green-600">graphical.target</td>
+                    <td><strong>圖形介面模式</strong> (以前的 Runlevel 5)。有 GUI。</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-red-600">emergency.target</td>
+                    <td><strong>緊急模式</strong>。只有最基本的唯讀系統，用於修復。</td>
+                </tr>
+            </table>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">systemctl get-default</span>
+<span class="cmd-comment"># 查看目前預設開機模式。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">systemctl set-default multi-user.target</span>
+<span class="cmd-comment"># 設定下次開機只進文字模式 (省資源)。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-yellow-500 mt-12">
+                <h2 class="text-2xl font-bold text-amber-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：駭客任務</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-amber-800">
+                    <li class="pl-2">
+                        <strong>模擬忘記密碼：</strong>
+                        <br>重開機你的虛擬機。
+                    </li>
+                    <li class="pl-2">
+                        <strong>攔截開機：</strong>
+                        <br>在 Grub 選單按 'e'，加入 <code>rd.break</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>重設密碼：</strong>
+                        <br>依照上述步驟，將 root 密碼改為 <code>redhat123</code>。
+                        <br>記得 <code>touch /.autorelabel</code>。
+                    </li>
+                    <li class="pl-2">
+                        <strong>驗證：</strong>
+                        <br>重開機後，試著用新密碼登入。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

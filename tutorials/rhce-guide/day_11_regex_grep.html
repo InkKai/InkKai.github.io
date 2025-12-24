@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 11：正規表示式與 Grep | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffbeb; color: #451a03; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* 側邊導覽列 (Phase 2 琥珀色) */
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #1e1e1e; color: #d4d4d4; overflow-y: auto; z-index: 50; border-right: 1px solid #451a03; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #451a03; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #fcd34d; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #a3a3a3; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #292524; color: #fcd34d; border-left-color: #f59e0b; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        
+        h1 { font-size: 2.5rem; font-weight: 800; color: #78350f; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #92400e; border-bottom: 2px solid #fde68a; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        
+        .section-num { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+
+        .cmd-block { background-color: #1e1e1e; color: #fbbf24; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #f59e0b; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fcd34d; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #fcd34d; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #fff7ed; text-align: left; padding: 1rem; border-bottom: 2px solid #fcd34d; font-weight: 700; color: #92400e; }
+        td { padding: 1rem; border-bottom: 1px solid #fde68a; vertical-align: top; }
+        
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #ea580c; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 2: RH134 進階篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#grep" class="nav-item"><span class="nav-icon">01</span> Grep 搜尋神器</a>
+            <a href="#regex" class="nav-item"><span class="nav-icon">02</span> 正規表示式 (Regex)</a>
+            <a href="#vim_search" class="nav-item"><span class="nav-icon">03</span> Vim 中的搜尋</a>
+            <a href="#script" class="nav-item"><span class="nav-icon">04</span> 第一個 Shell Script</a>
+            <a href="#lab" class="nav-item" style="color:#fcd34d;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold tracking-widest">DAY 11</span>
+                <span class="text-amber-700 font-mono text-sm">RH134 Unit 1</span>
+            </div>
+            <h1>精準搜尋：正規表示式與 Grep</h1>
+            <p class="text-xl text-amber-900 max-w-3xl leading-relaxed">
+                歡迎來到 Phase 2！今天我們要學習如何在大海（成千上萬行的 Log）中撈針（關鍵錯誤訊息）。學會正規表示式 (Regex)，你就能像魔術師一樣操控文字。
+            </p>
+        </header>
+
+        <!-- 1. Grep -->
+        <section id="grep">
+            <h2><span class="section-num">1</span> 搜尋神器：Grep</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🔍 篩子的比喻</h4>
+                <p class="text-slate-700">
+                    Grep 就像一個濾網。你把一桶沙子（檔案內容）倒過去，它只會留下你想要的黃金（關鍵字行），其他的沙子通通丟掉。
+                </p>
+            </div>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">grep "root" /etc/passwd</span>
+<span class="cmd-comment"># 在 /etc/passwd 檔案中，搜尋包含 "root" 的每一行。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">grep -i "error" /var/log/messages</span>
+<span class="cmd-comment"># -i (Ignore case)：不分大小寫 (Error, error, ERROR 都抓)。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">grep -v "student" /etc/passwd</span>
+<span class="cmd-comment"># -v (Invert)：反向搜尋。顯示「不包含」student 的行。</span>
+            </div>
+        </section>
+
+        <!-- 2. Regex -->
+        <section id="regex">
+            <h2><span class="section-num">2</span> 正規表示式 (Regex)：文字魔法</h2>
+            <p class="mb-4 text-amber-900">Regex 是一種用符號來描述「文字特徵」的語言。考試必考！</p>
+
+            <table>
+                <tr>
+                    <th class="w-1/4">符號</th>
+                    <th>意義</th>
+                    <th>範例</th>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-red-600">^</td>
+                    <td><strong>行首 (Start of line)</strong></td>
+                    <td><code>^root</code> (只找開頭是 root 的行)</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-red-600">$</td>
+                    <td><strong>行尾 (End of line)</strong></td>
+                    <td><code>bash$</code> (只找結尾是 bash 的行)</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">.</td>
+                    <td><strong>任意一個字元</strong></td>
+                    <td><code>r..t</code> (找 root, r00t, rest...)</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-blue-600">*</td>
+                    <td><strong>重複前一個字元 0 次或多次</strong></td>
+                    <td><code>go*d</code> (找 gd, god, good, goood...)</td>
+                </tr>
+                <tr>
+                    <td class="font-mono font-bold text-green-600">[ ]</td>
+                    <td><strong>括號內的任一字元</strong></td>
+                    <td><code>[rR]oot</code> (找 root 或 Root)</td>
+                </tr>
+            </table>
+
+            <div class="bg-yellow-100 p-4 rounded border border-yellow-300 mt-4">
+                <p class="font-bold text-yellow-800">💡 實戰範例：找空行</p>
+                <p class="text-sm text-yellow-900">
+                    空行的特徵是什麼？就是「開頭緊接著結尾」。<br>
+                    所以 <code>grep "^$" file.txt</code> 可以找出所有空行。<br>
+                    而 <code>grep -v "^$" file.txt</code> 可以<strong>刪除所有空行</strong>！(考試常用技巧)
+                </p>
+            </div>
+        </section>
+
+        <!-- 3. Vim Search -->
+        <section id="vim_search">
+            <h2><span class="section-num">3</span> Vim 中的搜尋取代</h2>
+            <p class="mb-4 text-amber-900">在 Vim 裡面也可以用 Regex。</p>
+            
+            <ul class="list-disc list-inside space-y-2 text-amber-900 ml-4">
+                <li><code>/keyword</code>：往下搜尋 keyword。</li>
+                <li><code>?keyword</code>：往上搜尋 keyword。</li>
+                <li><code>:%s/old/new/g</code>：全文搜尋取代。把所有的 old 換成 new。</li>
+            </ul>
+        </section>
+
+        <!-- 4. Shell Script -->
+        <section id="script">
+            <h2><span class="section-num">4</span> 自動化的起點：Shell Script</h2>
+            <p class="mb-4 text-amber-900">Shell Script 就是把一堆指令寫在一個檔案裡，讓電腦一次執行。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">vim my_script.sh</span>
+<span class="cmd-comment"># 內容如下：</span>
+<span class="cmd-input">#!/bin/bash</span>
+<span class="cmd-comment"># 第一行一定要是這個！稱為 Shebang，告訴系統用 bash 來執行。</span>
+<span class="cmd-input">echo "Hello, checking system..."</span>
+<span class="cmd-input">date</span>
+<span class="cmd-input">grep "^root" /etc/passwd</span>
+            </div>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">chmod +x my_script.sh</span>
+<span class="cmd-comment"># 給予執行權限 (x)</span>
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">./my_script.sh</span>
+<span class="cmd-comment"># 執行它！</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-yellow-500 mt-12">
+                <h2 class="text-2xl font-bold text-amber-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：駭客搜查線</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-amber-800">
+                    <li class="pl-2">
+                        <strong>找出能登入的使用者：</strong>
+                        <br>在 <code>/etc/passwd</code> 中，如果行尾是 <code>/bin/bash</code>，代表該使用者可以登入。
+                        <br>請用 grep 和 regex 找出這些人。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">grep "bash$" /etc/passwd</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>過濾設定檔：</strong>
+                        <br>查看 <code>/etc/ssh/sshd_config</code>，但我們不想看「註解 (#開頭)」和「空行」。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">grep -v "^#" /etc/ssh/sshd_config | grep -v "^$"</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>撰寫腳本：</strong>
+                        <br>寫一個 <code>check_user.sh</code>，執行時會顯示 "Current users:"，然後列出系統上有幾個使用者 (提示：<code>wc -l</code>)。
+                        <br>別忘了 <code>chmod +x</code>。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,113 @@
+/* dashboard.css - 首頁儀表板專用樣式 */
+
+html { scroll-behavior: smooth; }
+body { font-family: 'Noto Sans TC', sans-serif; background-color: #0f172a; color: #f8fafc; }
+.mono-font { font-family: 'JetBrains Mono', monospace; }
+
+/* 階段標題卡 */
+.phase-header { border-left: 4px solid; padding-left: 1rem; margin-bottom: 1.5rem; }
+.phase-1 { border-color: #ef4444; } /* Red for RH124 */
+.phase-2 { border-color: #eab308; } /* Yellow for RH134 */
+.phase-3 { border-color: #3b82f6; } /* Blue for RH294 */
+
+/* 課程卡片容器 */
+.day-card-container {
+    background-color: #1e293b; 
+    border: 1px solid #334155; 
+    border-radius: 0.5rem; 
+    position: relative; 
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    transition: all 0.2s ease; 
+}
+
+.day-card-container:hover { 
+    transform: translateY(-4px); 
+    border-color: #94a3b8; 
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); 
+}
+
+/* 完成狀態樣式 */
+.day-card-container.completed {
+    border-color: #10b981; /* Emerald 500 */
+    background-color: #0f2922; /* Darker Green bg */
+}
+.day-card-container.completed .card-title {
+    text-decoration: line-through;
+    color: #64748b;
+}
+.day-card-container.completed::before {
+    background-color: #10b981 !important;
+}
+
+/* 頂部彩色條 */
+.day-card-container::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 4px; }
+.day-card-container.rh124::before { background-color: #ef4444; }
+.day-card-container.rh134::before { background-color: #eab308; }
+.day-card-container.rh294::before { background-color: #3b82f6; }
+
+.day-badge { font-size: 0.75rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; display: block; }
+.rh124-text { color: #f87171; }
+.rh134-text { color: #facc15; }
+.rh294-text { color: #60a5fa; }
+
+/* 標題與描述 */
+.card-title { font-size: 1rem; font-weight: 700; color: #e2e8f0; margin-bottom: 0.5rem; line-height: 1.4; }
+.day-card-container:hover .card-title { color: #ffffff; }
+.card-desc { font-size: 0.75rem; color: #64748b; margin-top: auto; border-top: 1px solid #334155; padding-top: 0.5rem; }
+
+/* 進度條 */
+.progress-bar-bg { width: 100%; height: 8px; background-color: #334155; border-radius: 99px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, #ef4444, #eab308, #3b82f6); width: 0%; transition: width 0.5s ease; }
+
+/* 表格樣式 */
+.syllabus-table th { background-color: #334155; color: #f1f5f9; padding: 0.75rem; text-align: left; font-size: 0.875rem; }
+.syllabus-table td { border-bottom: 1px solid #334155; padding: 0.75rem; font-size: 0.875rem; color: #cbd5e1; }
+.syllabus-table tr:last-child td { border-bottom: none; }
+
+details summary::-webkit-details-marker { display: none; }
+
+/* 背景動畫效果 */
+@keyframes blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(30px, -50px) scale(1.1); }
+    66% { transform: translate(-20px, 20px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+}
+.animate-blob {
+    animation: blob 7s infinite;
+}
+.animation-delay-2000 {
+    animation-delay: 2s;
+}
+
+/* 勾選按鈕樣式 */
+.check-btn {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    z-index: 20;
+    background: rgba(30, 41, 59, 0.8);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #475569;
+    border: 2px solid #475569;
+}
+.check-btn:hover {
+    transform: scale(1.1);
+    border-color: #cbd5e1;
+    color: #cbd5e1;
+}
+.day-card-container.completed .check-btn {
+    background: #10b981;
+    border-color: #10b981;
+    color: white;
+}

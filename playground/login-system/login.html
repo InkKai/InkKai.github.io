@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員首頁</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e3f2fd; /* 用不一樣的背景色區分 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .welcome-box {
+            background: white;
+            padding: 50px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        h1 { color: #2c3e50; }
+        p { color: #555; font-size: 18px; }
+        .logout-btn {
+            margin-top: 20px;
+            padding: 10px 30px;
+            background-color: #ff4b5c;
+            color: white;
+            text-decoration: none; /* 去除超連結底線 */
+            border-radius: 5px;
+            display: inline-block;
+            transition: background 0.3s;
+        }
+        .logout-btn:hover { background-color: #d43f4d; }
+    </style>
+</head>
+<body>
+
+    <div class="welcome-box">
+        <h1>🎉 歡迎回來！</h1>
+        <p>您已經成功登入系統。</p>
+        <p>這裡是 login.html 頁面。</p>
+        
+        <a href="login.html" class="logout-btn">登出系統</a>
+    </div>
+
+</body>
+</html>

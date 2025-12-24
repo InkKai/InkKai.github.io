@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 18：Stratis & VDO | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffbeb; color: #451a03; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #1e1e1e; color: #d4d4d4; overflow-y: auto; z-index: 50; border-right: 1px solid #451a03; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #451a03; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #fcd34d; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #a3a3a3; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #292524; color: #fcd34d; border-left-color: #f59e0b; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #78350f; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #92400e; border-bottom: 2px solid #fde68a; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #fbbf24; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #f59e0b; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fcd34d; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #fcd34d; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #fff7ed; text-align: left; padding: 1rem; border-bottom: 2px solid #fcd34d; font-weight: 700; color: #92400e; }
+        td { padding: 1rem; border-bottom: 1px solid #fde68a; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #ea580c; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 2: RH134 進階篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#stratis" class="nav-item"><span class="nav-icon">01</span> 下一代 LVM (Stratis)</a>
+            <a href="#vdo" class="nav-item"><span class="nav-icon">02</span> 壓縮神器 (VDO)</a>
+            <a href="#install" class="nav-item"><span class="nav-icon">03</span> 安裝必要套件</a>
+            <a href="#lab" class="nav-item" style="color:#fcd34d;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold tracking-widest">DAY 18</span>
+                <span class="text-amber-700 font-mono text-sm">RH134 Unit 8</span>
+            </div>
+            <h1>進階儲存技術：Stratis 與 VDO</h1>
+            <p class="text-xl text-amber-900 max-w-3xl leading-relaxed">
+                LVM 很棒，但步驟太繁瑣 (PV->VG->LV->FS)。<strong>Stratis</strong> 讓儲存管理變得像傻瓜相機一樣簡單。而 <strong>VDO</strong> 則能幫你省下昂貴的 SSD 空間。
+            </p>
+        </header>
+
+        <!-- 1. Stratis -->
+        <section id="stratis">
+            <h2><span class="section-num">1</span> Stratis：儲存池管理</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🏊 游泳池的比喻</h4>
+                <p class="text-slate-700">
+                    Stratis 就像一個大游泳池 (Pool)。你不用管水管怎麼接 (PV/VG/LV)，只要把水龍頭 (Block Device) 打開，水就會流進池子。你需要多少水 (FileSystem)，直接從池子舀就好，不用預先切格子。
+                </p>
+            </div>
+
+            <h3 class="text-lg font-bold mt-4">安裝與啟動</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf install stratisd stratis-cli -y</span>
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">systemctl enable --now stratisd</span>
+<span class="cmd-comment"># Stratis 是透過一個守護進程 (stratisd) 來管理的。</span>
+            </div>
+
+            <h3 class="text-lg font-bold mt-4">建立 Pool 與 FS</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">stratis pool create mypool /dev/vdb</span>
+<span class="cmd-comment"># 建立一個叫 mypool 的池，使用 /dev/vdb 硬碟。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">stratis filesystem create mypool myfs</span>
+<span class="cmd-comment"># 在池子上建立一個叫 myfs 的檔案系統。</span>
+<span class="cmd-comment"># 注意：它會自動格式化成 XFS，你不用自己 mkfs！</span>
+            </div>
+        </section>
+
+        <!-- 2. VDO -->
+        <section id="vdo">
+            <h2><span class="section-num">2</span> VDO：虛擬資料最佳化</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🗜️ 壓縮袋的比喻</h4>
+                <p class="text-slate-700">
+                    VDO (Virtual Data Optimizer) 做兩件事：
+                    <br>1. <strong>去重複 (Deduplication)</strong>：如果你存了 10 次一樣的檔案，它只會存 1 份。
+                    <br>2. <strong>壓縮 (Compression)</strong>：像 Zip 一樣把檔案壓小。
+                    <br>結果：1TB 的硬碟可能可以存 3TB 的資料！
+                </p>
+            </div>
+
+            <p class="mt-4 text-amber-900 font-bold">RHEL 9 的 VDO 整合進了 LVM：</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf install lvm2 kmod-kvdo vdo -y</span>
+<span class="cmd-comment"># 安裝 VDO 相關套件。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">lvcreate --type vdo -n vdo_lv -L 5G -V 15G myvg</span>
+<span class="cmd-comment"># 這行指令很神奇：</span>
+<span class="cmd-comment"># -L 5G: 實際佔用硬碟 5G。</span>
+<span class="cmd-comment"># -V 15G: 騙系統說我有 15G (Virtual Size)。</span>
+<span class="cmd-comment"># 這就是 VDO 的魔法：超賣空間。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-yellow-500 mt-12">
+                <h2 class="text-2xl font-bold text-amber-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：Stratis 實作</h2>
+                <p class="text-slate-600 mb-4">假設你有閒置硬碟 <code>/dev/vdc</code>。</p>
+                
+                <ol class="list-decimal list-inside space-y-4 text-amber-800">
+                    <li class="pl-2">
+                        <strong>安裝 Stratis：</strong>
+                        <br>安裝套件並啟動服務。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">dnf install stratisd stratis-cli; systemctl enable --now stratisd</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>建立儲存池：</strong>
+                        <br>建立 <code>pool1</code>，使用 <code>/dev/vdc</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">stratis pool create pool1 /dev/vdc</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>建立檔案系統：</strong>
+                        <br>建立 <code>fs1</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">stratis filesystem create pool1 fs1</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>掛載：</strong>
+                        <br>建立 <code>/mnt/stratis</code> 並掛載。
+                        <br>注意：Stratis 的 UUID 查詢要用 <code>stratis fs list</code> 或 <code>lsblk --output=UUID</code>。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

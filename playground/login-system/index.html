@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員登入</title>
+    <style>
+        /* 樣式與之前相同，保持美觀 */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .login-container h2 { color: #333; margin-bottom: 30px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        .input-group label { display: block; margin-bottom: 5px; color: #666; font-size: 14px; }
+        .input-group input {
+            width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;
+            box-sizing: border-box; transition: border-color 0.3s;
+        }
+        .input-group input:focus { border-color: #007bff; outline: none; }
+        button {
+            width: 100%; padding: 12px; background-color: #007bff; color: white;
+            border: none; border-radius: 5px; font-size: 16px; cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover { background-color: #0056b3; }
+        #error-msg { color: red; font-size: 14px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        <h2>系統登入</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label for="username">帳號 (admin)</label>
+                <input type="text" id="username" name="username" placeholder="請輸入帳號" required>
+            </div>
+            <div class="input-group">
+                <label for="password">密碼 (123456)</label>
+                <input type="password" id="password" name="password" placeholder="請輸入密碼" required>
+            </div>
+            <button type="submit">登入</button>
+            <p id="error-msg">帳號或密碼錯誤！</p>
+        </form>
+    </div>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const errorMsg = document.getElementById('error-msg');
+
+        loginForm.addEventListener('submit', function(event) {
+            event.preventDefault(); // 阻止表單預設送出
+
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            // 驗證邏輯
+            if (user === 'admin' && pass === '123456') {
+                alert('登入成功！即將跳轉...');
+                
+                // --- 關鍵修改在這裡 ---
+                // 跳轉到同目錄下的 index.html
+                window.location.href = 'login.html'; 
+                
+            } else {
+                errorMsg.style.display = 'block'; // 顯示錯誤訊息
+                
+                // 為了使用者體驗，清空密碼欄位
+                document.getElementById('password').value = '';
+            }
+        });
+    </script>
+
+</body>
+</html>

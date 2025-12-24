@@ -1,0 +1,121 @@
+/* --- 全局設定 (Cyberpunk 風格) --- */
+body {
+    background-color: #1a1a2e; /* 深藍色背景 */
+    color: #fff;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* --- 標題區 --- */
+header {
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #0f3460, #16213e);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    margin-bottom: 30px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2.5rem;
+    color: #e94560; /* 霓虹粉 */
+    text-shadow: 2px 2px 0px #000;
+}
+
+/* --- 遊戲卡片區 (Grid 排版) --- */
+.game-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.game-card {
+    background-color: #16213e;
+    border: 2px solid #0f3460;
+    border-radius: 15px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.game-card:hover {
+    transform: translateY(-10px);
+    border-color: #e94560;
+    box-shadow: 0 0 20px rgba(233, 69, 96, 0.6);
+}
+
+.icon { font-size: 4rem; margin-bottom: 10px; }
+h3 { color: #4cc9f0; margin: 10px 0; }
+
+.game-card.locked {
+    filter: grayscale(100%);
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* --- 遊戲內部通用樣式 (Game Area) --- */
+.game-area {
+    background-color: #16213e;
+    padding: 40px;
+    border-radius: 15px;
+    max-width: 500px;
+    margin: 20px auto;
+    border: 2px solid #4cc9f0; /* 霓虹藍邊框 */
+    box-shadow: 0 0 20px rgba(76, 201, 240, 0.2);
+}
+
+input {
+    padding: 10px;
+    font-size: 1.5rem;
+    border-radius: 5px;
+    border: none;
+    text-align: center;
+    width: 150px;
+    margin: 20px 0;
+}
+
+button {
+    background-color: #e94560;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    font-size: 1.2rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+    margin: 5px;
+}
+
+button:hover { background-color: #ff2e63; }
+
+#result {
+    margin-top: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    min-height: 40px;
+}
+
+/* --- 回首頁按鈕 --- */
+.back-btn {
+    display: inline-block;
+    margin-top: 30px;
+    padding: 10px 20px;
+    color: #4cc9f0;
+    text-decoration: none;
+    border: 1px solid #4cc9f0;
+    border-radius: 30px;
+    transition: all 0.3s;
+}
+
+.back-btn:hover {
+    background-color: #4cc9f0;
+    color: #000;
+}
+
+footer { padding: 40px; color: #666; font-size: 0.9rem; }
+a { color: #e94560; text-decoration: none; }

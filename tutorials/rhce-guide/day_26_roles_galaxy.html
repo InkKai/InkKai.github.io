@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 26：Roles 角色分工 | RHCE 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; color: #0c4a6e; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #0ea5e9; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #38bdf8; border-left-color: #0ea5e9; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0c4a6e; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #0369a1; border-bottom: 2px solid #bae6fd; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #0ea5e9; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e0f2fe; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #0ea5e9; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #38bdf8; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #7dd3fc; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f0f9ff; text-align: left; padding: 1rem; border-bottom: 2px solid #7dd3fc; font-weight: 700; color: #0369a1; }
+        td { padding: 1rem; border-bottom: 1px solid #bae6fd; vertical-align: top; }
+        .analogy-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0ea5e9; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCE 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 3: RH294 自動化</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> Role 的概念</a>
+            <a href="#structure" class="nav-item"><span class="nav-icon">02</span> 目錄結構 (init)</a>
+            <a href="#use" class="nav-item"><span class="nav-icon">03</span> 使用 Role</a>
+            <a href="#galaxy" class="nav-item"><span class="nav-icon">04</span> Ansible Galaxy</a>
+            <a href="#system" class="nav-item"><span class="nav-icon">05</span> System Roles</a>
+            <a href="#lab" class="nav-item" style="color:#38bdf8;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 26</span>
+                <span class="text-blue-800 font-mono text-sm">RH294 Unit 7, 8</span>
+            </div>
+            <h1>大型專案管理：Roles 角色分工</h1>
+            <p class="text-xl text-sky-900 max-w-3xl leading-relaxed">
+                當你的 Playbook 超過 100 行時，就該考慮「重構」了。Role 是 Ansible 管理複雜專案的標準方式，它把工作拆解成獨立、可重複使用的模組。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 什麼是 Role？</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-sky-700 text-lg mb-2">🎬 電影劇組的比喻</h4>
+                <p class="text-slate-700">
+                    一部電影 (Playbook) 包含很多工作：
+                    <br><strong>Tasks</strong> 是演員的台詞。
+                    <br><strong>Vars</strong> 是角色的名字。
+                    <br><strong>Templates</strong> 是道具。
+                    <br>如果把這些全部混在一起，導演會崩潰。
+                    <br><strong>Role</strong> 就是把這些東西分門別類放進不同的資料夾 (Tasks 歸 Tasks, Vars 歸 Vars)，變成一個「燈光組包」或「音效組包」。
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. Structure -->
+        <section id="structure">
+            <h2><span class="section-num">2</span> 建立 Role：目錄結構</h2>
+            <p class="mb-4 text-slate-600">我們不用手動建立一堆資料夾，用指令就好。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">cd roles/</span>
+<span class="cmd-comment"># 通常會在專案目錄下建一個 roles 資料夾</span>
+
+<span class="cmd-prompt">[student@control roles]$</span> <span class="cmd-input">ansible-galaxy init my_role</span>
+<span class="cmd-comment"># 自動產生標準結構</span>
+            </div>
+
+            <p class="mt-4 text-sky-900 font-bold">標準結構說明 (考試重點)：</p>
+            <ul class="list-disc list-inside space-y-2 text-slate-700 font-mono text-sm">
+                <li><code>my_role/tasks/main.yml</code>: <strong>主要的執行步驟 (必備)</strong>。</li>
+                <li><code>my_role/handlers/main.yml</code>: 觸發器 (如重啟服務)。</li>
+                <li><code>my_role/templates/</code>: 放 .j2 模板檔。</li>
+                <li><code>my_role/files/</code>: 放靜態檔案 (copy 用)。</li>
+                <li><code>my_role/vars/main.yml</code>: 定義變數 (優先權高)。</li>
+                <li><code>my_role/defaults/main.yml</code>: 預設變數 (優先權最低，給人覆蓋用)。</li>
+            </ul>
+        </section>
+
+        <!-- 3. Use -->
+        <section id="use">
+            <h2><span class="section-num">3</span> 在 Playbook 中使用 Role</h2>
+            <p class="mb-4 text-slate-600">有了 Role 之後，你的 Playbook 會變得超級乾淨。</p>
+
+            <div class="cmd-block text-sm">
+<span class="cmd-input">---</span>
+<span class="cmd-input">- name: Deploy Web Server</span>
+<span class="cmd-input">  hosts: webservers</span>
+<span class="cmd-input">  roles:</span>
+<span class="cmd-input">    - my_role</span> <span class="cmd-comment"># 就這樣！一行搞定。</span>
+<span class="cmd-input">    - { role: database, db_port: 3306 }</span> <span class="cmd-comment"># 也可以傳變數進去</span>
+            </div>
+        </section>
+
+        <!-- 4. Galaxy -->
+        <section id="galaxy">
+            <h2><span class="section-num">4</span> Ansible Galaxy</h2>
+            <p class="mb-4 text-slate-600">這是 Ansible 的「App Store」。你可以下載別人寫好的 Role。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible-galaxy search nginx</span>
+<span class="cmd-comment"># 搜尋。</span>
+
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible-galaxy install geerlingguy.nginx</span>
+<span class="cmd-comment"># 下載並安裝。</span>
+            </div>
+        </section>
+
+        <!-- 5. System Roles -->
+        <section id="system">
+            <h2><span class="section-num">5</span> RHEL System Roles</h2>
+            <div class="alert-box">
+                <p class="font-bold text-red-800">🔥 考試必考</p>
+                <p class="text-slate-700">
+                    Red Hat 官方提供了一套高品質的 Roles，用來設定網路、時間、SELinux 等。
+                    <br>套件名稱：<code>rhel-system-roles</code>
+                    <br>安裝位置：<code>/usr/share/ansible/roles/</code>
+                </p>
+            </div>
+            <p class="text-slate-600 mt-2">
+                考試時，你通常不需要從頭寫 Network 或 SELinux 的設定，直接呼叫這些官方 Role 傳參數進去就好。
+            </p>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-sky-500 mt-12">
+                <h2 class="text-2xl font-bold text-sky-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：封裝 Apache</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-sky-800">
+                    <li class="pl-2">
+                        <strong>初始化 Role：</strong>
+                        <br>在 <code>~/ansible-lab/roles</code> 下建立 <code>apache_role</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">ansible-galaxy init apache_role</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>搬移 Tasks：</strong>
+                        <br>編輯 <code>roles/apache_role/tasks/main.yml</code>。
+                        <br>加入安裝 httpd、啟動服務、設定防火牆的 Task。
+                    </li>
+                    <li class="pl-2">
+                        <strong>搬移 Templates：</strong>
+                        <br>把 <code>index.html.j2</code> 放到 <code>roles/apache_role/templates/</code>。
+                        <br>在 tasks 裡使用 <code>template</code> 模組 (src 不用寫路徑，直接寫檔名)。
+                    </li>
+                    <li class="pl-2">
+                        <strong>呼叫 Role：</strong>
+                        <br>建立 <code>site.yml</code>，內容只要呼叫這個 Role。
+                        <br>執行並驗證。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

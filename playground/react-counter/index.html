@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>React 計數器與說明</title>
+    
+    <link rel="stylesheet" href="style.css"> 
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body>
+
+    <div class="info-container">
+        <h2 style="color: #61DAFB;">⚛️ 關於 React</h2>
+        
+        <details>
+            <summary>React 的核心思想是什麼？</summary>
+            <p>React 是一個專注於建立使用者介面 (UI) 的 JavaScript 函式庫。它的核心是將複雜的 UI 拆分成獨立、可重複使用的單元，稱為 **元件 (Components)**。</p>
+        </details>
+        
+        <details>
+            <summary>什麼是狀態 (State)？</summary>
+            <p>狀態 (State) 是元件內部的記憶體。當您在計數器中點擊按鈕時，是透過呼叫 `setCount` 更新狀態。React 會自動偵測狀態變化並高效地重新渲染畫面。</p>
+        </details>
+
+        <details>
+            <summary>什麼是虛擬 DOM (Virtual DOM)？</summary>
+            <p>虛擬 DOM 是 React 用來提高效能的機制。它在記憶體中維護真實 DOM 的副本，只找出需要變動的最小部分，然後才去更新瀏覽器中的真實 DOM，以提高渲染效率。</p>
+        </details>
+        
+        <p style="font-size: 0.9em; margin-top: 15px; color: #aaa;">
+            *此計數器範例使用了 <code style="color: #ff9800;">useState Hook</code> 來管理狀態。
+        </p>
+    </div>
+
+    <div id="root"></div>
+
+    <script type="text/babel" src="script.js"></script>
+
+</body>
+</html>

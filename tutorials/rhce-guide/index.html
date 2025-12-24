@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30 天 Linux 系統工程師養成計畫 | RHCSA & RHCE</title>
+    <!-- Tailwind CSS (維持 CDN 即可，因為首頁依賴它) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 圖示庫 -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- 字體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- ★★★ 引用新建立的首頁專用樣式 ★★★ -->
+    <link rel="stylesheet" href="assets/css/dashboard.css?v=1">
+</head>
+<body>
+
+    <!-- Hero Section -->
+    <header class="bg-slate-900 border-b border-slate-800 py-12 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-red-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob"></div>
+        <div class="absolute bottom-0 left-0 w-64 h-64 bg-blue-600 rounded-full mix-blend-multiply filter blur-3xl opacity-10 animate-blob animation-delay-2000"></div>
+
+        <div class="container mx-auto px-4 relative z-10 text-center">
+            <div class="inline-block px-3 py-1 mb-4 text-xs font-bold tracking-wider text-red-400 uppercase bg-red-900 bg-opacity-30 rounded-full border border-red-800">
+                Project 30 Days
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-4 tracking-tight">
+                Linux 系統工程師養成計畫
+            </h1>
+            <p class="text-lg text-slate-400 max-w-2xl mx-auto mb-8">
+                30 天密集特訓，直指 Red Hat RHCSA & RHCE 雙認證。
+            </p>
+            
+            <!-- Overall Progress -->
+            <div class="max-w-md mx-auto mb-8">
+                <div class="flex justify-between text-xs text-slate-400 mb-1 items-end">
+                    <span>挑戰進度：<span id="progress-text">0 / 30</span></span>
+                    <button onclick="resetProgress()" class="text-slate-500 hover:text-red-400 text-xs flex items-center gap-1 transition-colors" title="清除所有進度">
+                        <i class="fas fa-trash-alt"></i> 重置進度
+                    </button>
+                </div>
+                <div class="progress-bar-bg relative">
+                    <div id="progress-fill" class="progress-bar-fill"></div>
+                </div>
+            </div>
+
+            <!-- Call to Action Buttons -->
+            <div>
+                <a href="#day-01-anchor" class="inline-flex items-center justify-center px-8 py-3 text-base font-bold text-white transition-all duration-200 bg-red-600 border border-transparent rounded-full hover:bg-red-700 hover:shadow-lg hover:shadow-red-500/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-600 focus:ring-offset-slate-900">
+                    <i class="fas fa-rocket mr-2"></i> 開始挑戰 (Day 01)
+                </a>
+                <p class="mt-3 text-xs text-slate-500">
+                    或是先查看 <a href="#prep-section" class="text-blue-400 hover:underline">課前準備</a>
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mission & Syllabus Section -->
+    <section class="container mx-auto px-4 py-8 max-w-7xl">
+        <div class="bg-gradient-to-r from-slate-800 to-slate-900 rounded-xl p-8 border border-slate-700 shadow-xl mb-8">
+            <h2 class="text-2xl font-bold text-white mb-4"><i class="fas fa-bullhorn text-red-500 mr-2"></i> 為什麼要發起這個挑戰？</h2>
+            <div class="grid md:grid-cols-2 gap-8">
+                <div>
+                    <p class="text-slate-300 leading-relaxed mb-4">
+                        市面上的 Red Hat 認證課程動輒數萬元。我們相信教育應該是平等的。
+                    </p>
+                    <p class="text-slate-300 leading-relaxed">
+                        本計畫將官方教材 (RH124/134/294) 的 39 個單元濃縮成「電腦小白」也能看懂的實戰筆記。
+                        <span class="text-emerald-400 font-bold">不用花錢補習，也能掌握企業級的 Linux 技能。</span>
+                    </p>
+                </div>
+                <div class="bg-slate-900 bg-opacity-50 p-4 rounded-lg border border-slate-700">
+                    <h3 class="font-bold text-white mb-2 text-sm uppercase tracking-wide">學習成效保證</h3>
+                    <ul class="space-y-2 text-sm text-slate-400">
+                        <li><i class="fas fa-check text-emerald-500 mr-2"></i> <strong>RHCSA (EX200)</strong>：系統管理、儲存、安全、容器</li>
+                        <li><i class="fas fa-check text-emerald-500 mr-2"></i> <strong>RHCE (EX294)</strong>：Ansible 自動化運維</li>
+                        <li><i class="fas fa-check text-emerald-500 mr-2"></i> <strong>完全免費</strong>：所有的 Lab 與筆記皆開源</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Syllabus Table (Collapsible) -->
+        <details class="group bg-slate-800 rounded-xl border border-slate-700 shadow-lg overflow-hidden mb-8">
+            <summary class="flex items-center justify-between p-6 cursor-pointer hover:bg-slate-750 transition select-none">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 text-white w-8 h-8 rounded flex items-center justify-center">
+                        <i class="fas fa-map"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-white">30 天 vs. 原廠 39 單元對照表</h3>
+                        <p class="text-xs text-slate-400">點擊展開查看我們如何覆蓋所有考點</p>
+                    </div>
+                </div>
+                <span class="transform group-open:rotate-180 transition-transform duration-200 text-slate-400">
+                    <i class="fas fa-chevron-down"></i>
+                </span>
+            </summary>
+            <div class="p-6 border-t border-slate-700 bg-slate-900">
+                <div class="overflow-x-auto">
+                    <table class="w-full syllabus-table text-left border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="w-1/4">課程階段</th>
+                                <th class="w-1/4">我們的規劃 (30 Days)</th>
+                                <th class="w-1/4">對應原廠單元 (Official Units)</th>
+                                <th>核心考點</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-bold text-red-400">第一階段：RH124</td>
+                                <td>Day 1 - Day 10</td>
+                                <td>Unit 1 - Unit 16</td>
+                                <td>終端機、檔案管理、權限、SSH、網路、軟體安裝</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-yellow-400">第二階段：RH134</td>
+                                <td>Day 11 - Day 20</td>
+                                <td>Unit 1 - Unit 13</td>
+                                <td>Script、排程、LVM、VDO、SELinux、Podman</td>
+                            </tr>
+                            <tr>
+                                <td class="font-bold text-blue-400">第三階段：RH294</td>
+                                <td>Day 21 - Day 30</td>
+                                <td>Unit 1 - Unit 10</td>
+                                <td>Playbook、Facts、Loop、Roles、自動化部署</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </details>
+
+        <!-- [NEW] Lab Environment Prep (Updated Hardware & Software Links) -->
+        <div id="prep-section" class="bg-slate-800/50 border border-slate-700 rounded-xl p-6 mb-12 scroll-mt-20">
+            <h3 class="text-xl font-bold text-white mb-4 flex items-center">
+                <i class="fas fa-tools text-orange-500 mr-3"></i> 課前準備：打造你的實驗室
+            </h3>
+            <p class="text-slate-400 mb-4 text-sm">在開始 Day 01 之前，請準備好一台效能足夠的電腦，並安裝以下軟體：</p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- 左側：硬體需求 -->
+                <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                    <h4 class="font-bold text-slate-200 mb-3 text-sm uppercase tracking-wide border-b border-slate-700 pb-2">
+                        <i class="fas fa-microchip mr-2 text-blue-400"></i> 建議硬體配置 (Host)
+                    </h4>
+                    <ul class="text-slate-300 text-sm space-y-3">
+                        <li class="flex justify-between items-center">
+                            <span><strong>CPU 處理器：</strong> 建議 12 核心</span>
+                            <span class="text-xs bg-slate-800 px-2 py-1 rounded text-slate-400">虛擬化 VT-x</span>
+                        </li>
+                        <li class="text-xs text-slate-500 pl-4 border-l-2 border-slate-700">
+                            分配：圖形化 RHEL (4核) + 無圖形化 RHEL (2核) + 預留
+                        </li>
+                        
+                        <li class="flex justify-between items-center pt-2">
+                            <span><strong>RAM 記憶體：</strong> 建議 12 GB</span>
+                        </li>
+                        <li class="text-xs text-slate-500 pl-4 border-l-2 border-slate-700">
+                            分配：足夠同時運行兩台虛擬機 (GUI + Server)
+                        </li>
+
+                        <li class="flex justify-between items-center pt-2">
+                            <span><strong>硬碟空間：</strong> 建議 100 GB</span>
+                        </li>
+                        <li class="text-xs text-slate-500 pl-4 border-l-2 border-slate-700">
+                            分配：Server A + Server B + 快照空間
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 右側：軟體下載連結 -->
+                <div class="bg-slate-900 p-4 rounded-lg border border-slate-800">
+                    <h4 class="font-bold text-slate-200 mb-3 text-sm uppercase tracking-wide border-b border-slate-700 pb-2">
+                        <i class="fas fa-download mr-2 text-green-400"></i> 必備軟體下載 (官方連結)
+                    </h4>
+                    <div class="space-y-3">
+                        <!-- OS -->
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase">作業系統 (OS)</span>
+                            <a href="https://www.redhat.com/" target="_blank" class="block mt-1 p-2 bg-slate-800 hover:bg-slate-700 rounded transition flex justify-between items-center group">
+                                <span class="text-red-400 font-bold group-hover:text-red-300"><i class="fab fa-redhat mr-2"></i> Red Hat Enterprise Linux</span>
+                                <i class="fas fa-external-link-alt text-xs text-slate-500"></i>
+                            </a>
+                        </div>
+
+                        <!-- Virtualization -->
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase">虛擬化軟體 (二選一)</span>
+                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                <a href="https://www.virtualbox.org/" target="_blank" class="p-2 bg-slate-800 hover:bg-slate-700 rounded transition text-center text-sm text-blue-400 font-bold">
+                                    VirtualBox
+                                </a>
+                                <a href="https://www.broadcom.com/" target="_blank" class="p-2 bg-slate-800 hover:bg-slate-700 rounded transition text-center text-sm text-blue-400 font-bold">
+                                    VMware (Broadcom)
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- SSH Client -->
+                        <div>
+                            <span class="text-xs font-bold text-slate-500 uppercase">SSH 連線工具</span>
+                            <div class="grid grid-cols-2 gap-2 mt-1">
+                                <a href="https://mobaxterm.mobatek.net/" target="_blank" class="p-2 bg-slate-800 hover:bg-slate-700 rounded transition text-center text-sm text-emerald-400 font-bold">
+                                    MobaXterm
+                                </a>
+                                <a href="https://putty.org/index.html" target="_blank" class="p-2 bg-slate-800 hover:bg-slate-700 rounded transition text-center text-sm text-emerald-400 font-bold">
+                                    PuTTY
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Map -->
+    <main class="container mx-auto px-4 py-8 max-w-7xl">
+        
+        <!-- Phase 1: RH124 -->
+        <div class="mb-16 scroll-mt-20" id="day-01-anchor">
+            <div class="phase-header phase-1">
+                <h2 class="text-2xl font-bold text-white">第一階段：RH124 系統管理基礎 (打地基)</h2>
+                <p class="text-slate-400 text-sm mt-1">對應目標：RHCSA 基礎題型 (檔案、權限、網路、服務)</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <!-- Day 01 -->
+                <div class="day-card-container rh124" id="card-1">
+                    <button class="check-btn" onclick="toggleDay(1)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_01_terminal_intro.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 01 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">Linux 的黑盒子：終端機與指令基礎</h3>
+                        <p class="card-desc">Ch1, Ch3: Shell, man, history</p>
+                    </a>
+                </div>
+                <!-- Day 02 -->
+                <div class="day-card-container rh124" id="card-2">
+                    <button class="check-btn" onclick="toggleDay(2)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_02_file_management.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 02 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">檔案總管再見：檔案管理與目錄結構</h3>
+                        <p class="card-desc">Ch2: cp, mv, rm, mkdir, 路徑</p>
+                    </a>
+                </div>
+                <!-- Day 03 -->
+                <div class="day-card-container rh124" id="card-3">
+                    <button class="check-btn" onclick="toggleDay(3)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_03_vim_io.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 03 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">文字編輯術：VIM 與文字流處理</h3>
+                        <p class="card-desc">Ch4: vim, I/O 重導向</p>
+                    </a>
+                </div>
+                <!-- Day 04 -->
+                <div class="day-card-container rh124" id="card-4">
+                    <button class="check-btn" onclick="toggleDay(4)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_04_users_groups.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 04 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">我是誰？使用者、群組與身份切換</h3>
+                        <p class="card-desc">Ch5: useradd, groupadd, sudo</p>
+                    </a>
+                </div>
+                <!-- Day 05 -->
+                <div class="day-card-container rh124" id="card-5">
+                    <button class="check-btn" onclick="toggleDay(5)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_05_permissions.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 05 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">權限的藝術：讀寫執行與特殊權限</h3>
+                        <p class="card-desc">Ch6: chmod, SUID, chown</p>
+                    </a>
+                </div>
+                <!-- Day 06 -->
+                <div class="day-card-container rh124" id="card-6">
+                    <button class="check-btn" onclick="toggleDay(6)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_06_processes_logs.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 06 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">系統的脈搏：行程管理與監控</h3>
+                        <p class="card-desc">Ch7: top, ps, kill</p>
+                    </a>
+                </div>
+                <!-- Day 07 -->
+                <div class="day-card-container rh124" id="card-7">
+                    <button class="check-btn" onclick="toggleDay(7)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_07_systemd_services.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 07 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">服務管理員：Systemd 與守護進程</h3>
+                        <p class="card-desc">Ch8: systemctl start/enable</p>
+                    </a>
+                </div>
+                <!-- Day 08 -->
+                <div class="day-card-container rh124" id="card-8">
+                    <button class="check-btn" onclick="toggleDay(8)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_08_ssh_archives.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 08 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">遠端連線：SSH 金鑰與安全傳輸</h3>
+                        <p class="card-desc">Ch9: ssh-keygen, tar, scp</p>
+                    </a>
+                </div>
+                <!-- Day 09 -->
+                <div class="day-card-container rh124" id="card-9">
+                    <button class="check-btn" onclick="toggleDay(9)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_09_network_config.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 09 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">網路設定：IP、DNS 與除錯</h3>
+                        <p class="card-desc">Ch12: nmcli, ping</p>
+                    </a>
+                </div>
+                <!-- Day 10 -->
+                <div class="day-card-container rh124" id="card-10">
+                    <button class="check-btn" onclick="toggleDay(10)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_10_software_management.html" class="block h-full p-4">
+                        <span class="day-badge rh124-text">Day 10 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">軟體管家與時光機：YUM/DNF 與打包</h3>
+                        <p class="card-desc">Ch11, 13: dnf, tar, gzip</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 2: RH134 -->
+        <div class="mb-16">
+            <div class="phase-header phase-2">
+                <h2 class="text-2xl font-bold text-white">第二階段：RH134 進階系統管理 (決勝負)</h2>
+                <p class="text-slate-400 text-sm mt-1">對應目標：RHCSA 進階題型 (儲存、安全、容器、排程)</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <!-- Day 11 -->
+                <div class="day-card-container rh134" id="card-11">
+                    <button class="check-btn" onclick="toggleDay(11)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_11_regex_grep.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 11 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">精準搜尋：正規表示式與 Grep</h3>
+                        <p class="card-desc">Regex, grep, vim 搜尋</p>
+                    </a>
+                </div>
+                <!-- Day 12 -->
+                <div class="day-card-container rh134" id="card-12">
+                    <button class="check-btn" onclick="toggleDay(12)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_12_scheduling.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 12 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">排程大師：Crontab 與臨時任務</h3>
+                        <p class="card-desc">Ch2: crontab, at</p>
+                    </a>
+                </div>
+                <!-- Day 13 -->
+                <div class="day-card-container rh134" id="card-13">
+                    <button class="check-btn" onclick="toggleDay(13)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_13_tuning_nice.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 13 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">效能調校：Tuned 與優先權管理</h3>
+                        <p class="card-desc">Ch3: tuned-adm, nice</p>
+                    </a>
+                </div>
+                <!-- Day 14 -->
+                <div class="day-card-container rh134" id="card-14">
+                    <button class="check-btn" onclick="toggleDay(14)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_14_acl_access.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 14 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">權限進階：ACL 存取控制列表</h3>
+                        <p class="card-desc">Ch4: setfacl, getfacl</p>
+                    </a>
+                </div>
+                <!-- Day 15 -->
+                <div class="day-card-container rh134" id="card-15">
+                    <button class="check-btn" onclick="toggleDay(15)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_15_selinux_security.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 15 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">最強防護罩：SELinux 實戰攻略</h3>
+                        <p class="card-desc">Ch5: Context, Boolean</p>
+                    </a>
+                </div>
+                <!-- Day 16 -->
+                <div class="day-card-container rh134" id="card-16">
+                    <button class="check-btn" onclick="toggleDay(16)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_16_partitions_fs.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 16 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">硬碟蛋糕切法 I：分區與檔案系統</h3>
+                        <p class="card-desc">Ch6: fdisk, mkfs, mount</p>
+                    </a>
+                </div>
+                <!-- Day 17 -->
+                <div class="day-card-container rh134" id="card-17">
+                    <button class="check-btn" onclick="toggleDay(17)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_17_lvm_storage.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 17 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">硬碟蛋糕切法 II：LVM 彈性磁碟管理</h3>
+                        <p class="card-desc">Ch7: PV, VG, LV Extend</p>
+                    </a>
+                </div>
+                <!-- Day 18 -->
+                <div class="day-card-container rh134" id="card-18">
+                    <button class="check-btn" onclick="toggleDay(18)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_18_stratis_vdo.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 18 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">進階儲存技術：Stratis 與 VDO</h3>
+                        <p class="card-desc">Ch8: Stratis, VDO</p>
+                    </a>
+                </div>
+                <!-- Day 19 -->
+                <div class="day-card-container rh134" id="card-19">
+                    <button class="check-btn" onclick="toggleDay(19)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_19_boot_rescue.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 19 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">開機流程與救援：忘記密碼怎麼辦？</h3>
+                        <p class="card-desc">Ch9, 10: Reset Root PW</p>
+                    </a>
+                </div>
+                <!-- Day 20 -->
+                <div class="day-card-container rh134" id="card-20">
+                    <button class="check-btn" onclick="toggleDay(20)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_20_podman_containers.html" class="block h-full p-4">
+                        <span class="day-badge rh134-text">Day 20 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">容器時代：Podman 基礎與管理</h3>
+                        <p class="card-desc">Ch12: podman, Systemd</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Phase 3: RH294 -->
+        <div class="mb-12">
+            <div class="phase-header phase-3">
+                <h2 class="text-2xl font-bold text-white">第三階段：RH294 自動化運維 (趨勢與未來)</h2>
+                <p class="text-slate-400 text-sm mt-1">對應目標：RHCE (Ansible 自動化)</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                <!-- Day 21 -->
+                <div class="day-card-container rh294" id="card-21">
+                    <button class="check-btn" onclick="toggleDay(21)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_21_ansible_intro.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 21 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">Ansible 初探：環境建置與架構</h3>
+                        <p class="card-desc">Ch1, 2: Inventory, cfg</p>
+                    </a>
+                </div>
+                <!-- Day 22 -->
+                <div class="day-card-container rh294" id="card-22">
+                    <button class="check-btn" onclick="toggleDay(22)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_22_playbook_yaml.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 22 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">劇本第一章：Playbook 與 YAML</h3>
+                        <p class="card-desc">Ch3: YAML, Tasks</p>
+                    </a>
+                </div>
+                <!-- Day 23 -->
+                <div class="day-card-container rh294" id="card-23">
+                    <button class="check-btn" onclick="toggleDay(23)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_23_vars_facts.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 23 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">變數的魔力：Variables 與 Facts</h3>
+                        <p class="card-desc">Ch4: Variables, Facts</p>
+                    </a>
+                </div>
+                <!-- Day 24 -->
+                <div class="day-card-container rh294" id="card-24">
+                    <button class="check-btn" onclick="toggleDay(24)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_24_loops_handlers.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 24 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">邏輯控制：迴圈、條件與處理器</h3>
+                        <p class="card-desc">Ch5: Loop, When</p>
+                    </a>
+                </div>
+                <!-- Day 25 -->
+                <div class="day-card-container rh294" id="card-25">
+                    <button class="check-btn" onclick="toggleDay(25)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_25_templates_files.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 25 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">檔案派送：Template 模板引擎</h3>
+                        <p class="card-desc">Ch6: Jinja2, Copy</p>
+                    </a>
+                </div>
+                <!-- Day 26 -->
+                <div class="day-card-container rh294" id="card-26">
+                    <button class="check-btn" onclick="toggleDay(26)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_26_roles_galaxy.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 26 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">大型專案管理：Roles 角色分工</h3>
+                        <p class="card-desc">Ch7: Roles, Galaxy</p>
+                    </a>
+                </div>
+                <!-- Day 27 -->
+                <div class="day-card-container rh294" id="card-27">
+                    <button class="check-btn" onclick="toggleDay(27)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_27_troubleshooting.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 27 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">進階技巧：錯誤處理與除錯</h3>
+                        <p class="card-desc">Ch8: Troubleshooting</p>
+                    </a>
+                </div>
+                <!-- Day 28 -->
+                <div class="day-card-container rh294" id="card-28">
+                    <button class="check-btn" onclick="toggleDay(28)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_28_storage_network_auto.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 28 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">系統自動化 I：儲存與網路自動化</h3>
+                        <p class="card-desc">Ch9: Storage, Network</p>
+                    </a>
+                </div>
+                <!-- Day 29 -->
+                <div class="day-card-container rh294" id="card-29">
+                    <button class="check-btn" onclick="toggleDay(29)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_29_users_security_auto.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 29 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">系統自動化 II：使用者與安全自動化</h3>
+                        <p class="card-desc">Ch9: Users, Security</p>
+                    </a>
+                </div>
+                <!-- Day 30 -->
+                <div class="day-card-container rh294" id="card-30">
+                    <button class="check-btn" onclick="toggleDay(30)">
+                        <i class="fas fa-check text-xs"></i>
+                    </button>
+                    <a href="day_30_mock_exam.html" class="block h-full p-4">
+                        <span class="day-badge rh294-text">Day 30 <i class="fas fa-rocket ml-1"></i></span>
+                        <h3 class="card-title">最終戰役：RHCSA+RHCE 模擬考與部署</h3>
+                        <p class="card-desc">Mock Exam</p>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-slate-900 border-t border-slate-800 text-slate-500 py-12 text-center text-sm">
+        <p>Copyright &copy; 2025 Linux 30-Day Challenge</p>
+        <p class="mt-2 text-xs">Designed for RHCSA (EX200) & RHCE (EX294) Certification Preparation.</p>
+    </footer>
+
+    <!-- ★★★ 引用新建立的首頁專用腳本 ★★★ -->
+    <script src="assets/js/dashboard.js"></script>
+</body>
+</html>

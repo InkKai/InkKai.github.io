@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 13：效能調校 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffbeb; color: #451a03; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #1e1e1e; color: #d4d4d4; overflow-y: auto; z-index: 50; border-right: 1px solid #451a03; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #451a03; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #fcd34d; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #a3a3a3; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #292524; color: #fcd34d; border-left-color: #f59e0b; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #78350f; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #92400e; border-bottom: 2px solid #fde68a; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #fbbf24; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #f59e0b; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fcd34d; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #fcd34d; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #fff7ed; text-align: left; padding: 1rem; border-bottom: 2px solid #fcd34d; font-weight: 700; color: #92400e; }
+        td { padding: 1rem; border-bottom: 1px solid #fde68a; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #ea580c; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 2: RH134 進階篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#tuned" class="nav-item"><span class="nav-icon">01</span> 系統調校 (Tuned)</a>
+            <a href="#nice" class="nav-item"><span class="nav-icon">02</span> 優先權 (Nice)</a>
+            <a href="#renice" class="nav-item"><span class="nav-icon">03</span> 調整優先權 (Renice)</a>
+            <a href="#lab" class="nav-item" style="color:#fcd34d;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold tracking-widest">DAY 13</span>
+                <span class="text-amber-700 font-mono text-sm">RH134 Unit 3</span>
+            </div>
+            <h1>效能調校：Tuned 與優先權管理</h1>
+            <p class="text-xl text-amber-900 max-w-3xl leading-relaxed">
+                你的伺服器是要跑高效能運算，還是要省電當檔案伺服器？今天我們學習如何切換系統的「駕駛模式」，以及如何讓重要的程式插隊先跑。
+            </p>
+        </header>
+
+        <!-- 1. Tuned -->
+        <section id="tuned">
+            <h2><span class="section-num">1</span> 系統駕駛模式：Tuned</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🚗 跑車模式 vs 省油模式</h4>
+                <p class="text-slate-700">
+                    <strong>Tuned</strong> 是一個守護進程，它會根據你選擇的 Profile (設定檔) 自動調整 CPU 頻率、磁碟 IO 設定等幾百項參數。
+                    <br>就像汽車切換 Sport 模式（高效能）或 Eco 模式（省電）。
+                </p>
+            </div>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">tuned-adm list</span>
+<span class="cmd-comment"># 列出所有可用的 Profile。</span>
+<span class="cmd-comment"># 常見的有：virtual-guest (虛擬機用), throughput-performance (高效能), balanced (平衡)。</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">tuned-adm active</span>
+<span class="cmd-comment"># 查看目前正在用哪一個 Profile。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">tuned-adm profile throughput-performance</span>
+<span class="cmd-comment"># 切換到高效能模式 (需要 root)。</span>
+            </div>
+        </section>
+
+        <!-- 2. Nice -->
+        <section id="nice">
+            <h2><span class="section-num">2</span> 禮讓運動：Nice 值</h2>
+            <p class="mb-4 text-amber-900">
+                Linux 的每個 Process 都有一個 <strong>Nice 值</strong>，範圍是 <strong>-20 到 19</strong>。
+                <br><strong>Nice 值越高，代表這個人越「好說話 (Nice)」，越願意禮讓別人，所以優先權越低。</strong>
+                <br><strong>Nice 值越低 (-20)，代表這個人越「壞 (Not Nice)」，越要搶第一，優先權越高。</strong>
+            </p>
+
+            <div class="bg-white p-4 rounded border border-amber-200 text-center font-bold">
+                <span class="text-red-600 mr-4">-20 (最兇，最高優先)</span>
+                &lt;--- 0 (預設) ---&gt;
+                <span class="text-green-600 ml-4">19 (最Nice，最低優先)</span>
+            </div>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">nice -n 5 sleep 1000 &</span>
+<span class="cmd-comment"># 啟動一個 Nice 值為 5 的程式 (比一般程式更禮讓)。</span>
+            </div>
+        </section>
+
+        <!-- 3. Renice -->
+        <section id="renice">
+            <h2><span class="section-num">3</span> 調整優先權：renice</h2>
+            <p class="mb-4 text-amber-900">如果程式已經在跑了，我們可以用 <code>renice</code> 來改變它的優先權。</p>
+
+            <div class="alert-box">
+                <p class="font-bold text-red-800">⚠️ 權限限制</p>
+                <p class="text-slate-700">一般使用者只能把 Nice 值<strong>調高</strong> (變更禮讓)。只有 Root 可以把 Nice 值<strong>調低</strong> (變更兇)。</p>
+            </div>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">renice -n -10 -p 1234</span>
+<span class="cmd-comment"># 把 PID 1234 的優先權調到 -10 (非常高優先)。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-yellow-500 mt-12">
+                <h2 class="text-2xl font-bold text-amber-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：效能大師</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-amber-800">
+                    <li class="pl-2">
+                        <strong>檢查並切換 Profile：</strong>
+                        <br>檢查目前 tuned profile。如果不是 <code>virtual-guest</code>，請切換過去 (假設你在虛擬機)。如果是實體機，切換到 <code>balanced</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">tuned-adm active</code>
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">sudo tuned-adm profile virtual-guest</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>啟動背景程式：</strong>
+                        <br>啟動一個 <code>sha1sum /dev/zero &</code> 指令 (這會吃大量 CPU)。記下它的 PID。
+                    </li>
+                    <li class="pl-2">
+                        <strong>觀察並調整：</strong>
+                        <br>使用 <code>top</code> 觀察它的 CPU 使用率和 NI (Nice) 值。
+                        <br>使用 <code>renice</code> 將其 Nice 值改為 19 (最低優先)。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">sudo renice -n 19 -p [PID]</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>善後：</strong>
+                        <br>別忘了把那個吃 CPU 的怪獸殺掉。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">kill [PID]</code>
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

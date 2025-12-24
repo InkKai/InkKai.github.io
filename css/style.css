@@ -1,0 +1,177 @@
+/* --- 全局設定：墨色基調 --- */
+:root {
+    /* 定義主題顏色變數，方便統一修改 */
+    --bg-color: #141414;      /* 深炭黑背景 */
+    --card-bg: #1f1f1f;       /* 卡片背景，比背景稍亮 */
+    --text-primary: #e0e0d0;  /* 米白文字，像宣紙 */
+    --text-secondary: #a0a090;/* 次要文字，淺灰 */
+    --accent-color: #cca35f;  /* 古銅金點綴色 */
+    --border-color: #333;     /* 深色邊框 */
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    /* 使用思源宋體，若無則用系統襯線體，最後用無襯線體 */
+    font-family: 'Noto Serif TC', serif, sans-serif;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+    position: relative;
+    min-height: 100vh;
+}
+
+/* --- 背景裝飾層 --- */
+.ink-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* 一個非常微妙的徑向漸層，讓中間稍微亮一點點，像墨暈開 */
+    background: radial-gradient(circle at center, #1f1f25 0%, #0a0a0a 100%);
+    z-index: -1; /* 放在最底層 */
+}
+
+/* --- 頁首 (Header) --- */
+header {
+    text-align: center;
+    padding: 80px 20px 40px;
+    /* 底部加一條微妙的金線 */
+    border-bottom: 1px solid rgba(204, 163, 95, 0.2);
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-size: 3.5rem;
+    margin: 0;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: 5px;
+    /* 文字陰影，製造一點墨水未乾的立體感 */
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    color: var(--accent-color); /* 使用古銅金 */
+    margin: 15px 0;
+    font-weight: bold;
+}
+
+.description {
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+    font-size: 1.1rem;
+}
+
+/* --- 主要內容區容器 --- */
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* --- 分類區塊樣式 --- */
+.category-section {
+    margin-bottom: 60px;
+}
+
+.category-title {
+    font-size: 1.8rem;
+    color: var(--text-primary);
+    /* 標題左側加一條金色的豎線裝飾 */
+    border-left: 5px solid var(--accent-color);
+    padding-left: 15px;
+    margin-bottom: 25px;
+}
+
+/* --- Grid 排版 (保持不變，很好用) --- */
+.grid-container {
+    display: grid;
+    /* 自動適應寬度，最小280px */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+}
+
+/* --- 卡片設計 (核心改動) --- */
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 25px;
+    text-decoration: none; /* 去掉連結底線 */
+    display: flex;
+    align-items: center;
+    transition: all 0.3s ease;
+    /* 初始狀態的陰影，比較貼近地面 */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* 卡片懸停效果 */
+.card:hover {
+    /* 往上浮起 */
+    transform: translateY(-5px);
+    /* 邊框變色 */
+    border-color: var(--accent-color);
+    /* 陰影變大，更有立體感 */
+    box-shadow: 0 12px 20px rgba(0,0,0,0.4);
+    background-color: #252525; /* 稍微變亮一點點 */
+}
+
+/* 在卡片上方加一條隱藏的金線，滑鼠移上去才出現 */
+.card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background-color: var(--accent-color);
+    transform: scaleX(0); /* 一開始寬度為0 */
+    transform-origin: left;
+    transition: transform 0.3s ease;
+}
+
+.card:hover::before {
+    transform: scaleX(1); /* 滑鼠移上去變寬 */
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-right: 20px;
+    /* 讓 Emoji 看起來比較柔和一點 */
+    filter: sepia(0.3) contrast(0.9);
+}
+
+.card-text h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    color: var(--text-primary);
+}
+
+.card-text p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+/* 遊戲卡片的特別樣式 (可選) */
+.game-card-style .card-icon {
+    /* 讓遊戲圖標稍微活潑一點 */
+     filter: sepia(0) contrast(1.1);
+}
+
+
+/* --- 頁尾 --- */
+footer {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 60px;
+}

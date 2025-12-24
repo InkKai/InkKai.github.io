@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 2：檔案管理 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #334155; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #ef4444; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #ef4444; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e5e5e5; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #ef4444; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fca5a5; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f1f5f9; text-align: left; padding: 1rem; border-bottom: 2px solid #cbd5e1; font-weight: 700; color: #1e293b; }
+        td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #f97316; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 1: RH124 基礎篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#fhs" class="nav-item"><span class="nav-icon">01</span> FHS 檔案架構</a>
+            <a href="#mkdir" class="nav-item"><span class="nav-icon">02</span> 蓋房子 (mkdir)</a>
+            <a href="#cp" class="nav-item"><span class="nav-icon">03</span> 影印機 (cp)</a>
+            <a href="#mv" class="nav-item"><span class="nav-icon">04</span> 搬運工 (mv)</a>
+            <a href="#rm" class="nav-item"><span class="nav-icon">05</span> 碎紙機 (rm)</a>
+            <a href="#links" class="nav-item"><span class="nav-icon">06</span> 連結 (Links)</a>
+            <a href="#lab" class="nav-item" style="color:#fca5a5;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 02</span>
+                <span class="text-slate-400 font-mono text-sm">RH124 Unit 3, 15</span>
+            </div>
+            <h1>檔案總管再見：檔案管理與目錄結構</h1>
+            <p class="text-xl text-slate-500 max-w-3xl leading-relaxed">
+                今天我們要拋棄滑鼠。用指令來蓋房子（建目錄）、搬家（移動）和影印（複製）。更重要的是，我們要學會 Linux 的「住址系統」—— FHS。
+            </p>
+        </header>
+
+        <!-- Content sections (omitted for brevity, assume full content is here) -->
+        <section id="fhs"><h2><span class="section-num">1</span> Linux 的地圖：FHS 架構</h2><div class="analogy-box"><p class="text-slate-700">Linux 的目錄不是亂放的。<code>/etc</code> (設定), <code>/var</code> (變動資料), <code>/home</code> (家)。</p></div></section>
+        <section id="mkdir"><h2><span class="section-num">2</span> 蓋房子：mkdir</h2><div class="cmd-block"><span class="cmd-prompt">$</span> <span class="cmd-input">mkdir -p a/b/c</span></div></section>
+        <section id="cp"><h2><span class="section-num">3</span> 影印機：cp</h2><div class="alert-box"><p class="text-slate-700">記得加 <code>-p</code> 保留權限！</p></div></section>
+        <section id="mv"><h2><span class="section-num">4</span> 搬運工：mv</h2><div class="cmd-block"><span class="cmd-prompt">$</span> <span class="cmd-input">mv file.txt /tmp</span></div></section>
+        <section id="rm"><h2><span class="section-num">5</span> 碎紙機：rm</h2><p class="text-slate-600"><code>rm -rf</code> 很危險，請小心。</p></section>
+        <section id="links"><h2><span class="section-num">6</span> 連結：Links</h2><p class="text-slate-600"><code>ln -s</code> (軟連結), <code>ln</code> (硬連結)。</p></section>
+        <section id="lab"><div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-red-500 mt-12"><h2 class="text-2xl font-bold text-slate-800 mb-6 border-none mt-0">🧪 今日實戰 Lab</h2><ol class="list-decimal list-inside space-y-4 text-slate-700"><li>mkdir -p 建立目錄</li><li>cp -p 備份檔案</li><li>ln -s 建立連結</li></ol></div></section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

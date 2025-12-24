@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 15：SELinux 攻略 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #fffbeb; color: #451a03; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #1e1e1e; color: #d4d4d4; overflow-y: auto; z-index: 50; border-right: 1px solid #451a03; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #451a03; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #fcd34d; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #f59e0b; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #a3a3a3; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #292524; color: #fcd34d; border-left-color: #f59e0b; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #78350f; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #92400e; border-bottom: 2px solid #fde68a; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #f59e0b; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #fbbf24; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #f59e0b; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fcd34d; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #fcd34d; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #fff7ed; text-align: left; padding: 1rem; border-bottom: 2px solid #fcd34d; font-weight: 700; color: #92400e; }
+        td { padding: 1rem; border-bottom: 1px solid #fde68a; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #ea580c; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 2: RH134 進階篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> 識別證與保全</a>
+            <a href="#modes" class="nav-item"><span class="nav-icon">02</span> 開關模式 (Modes)</a>
+            <a href="#context" class="nav-item"><span class="nav-icon">03</span> 標籤管理 (Context)</a>
+            <a href="#bool" class="nav-item"><span class="nav-icon">04</span> 開關功能 (Boolean)</a>
+            <a href="#lab" class="nav-item" style="color:#fcd34d;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold tracking-widest">DAY 15</span>
+                <span class="text-amber-700 font-mono text-sm">RH134 Unit 5</span>
+            </div>
+            <h1>最強防護罩：SELinux 實戰攻略</h1>
+            <p class="text-xl text-amber-900 max-w-3xl leading-relaxed">
+                這是 Red Hat 考試的大魔王。很多人遇到 Permission denied 就會想把 SELinux 關掉。但身為專業工程師，我們要學會駕馭它，而不是逃避它。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 什麼是 SELinux？</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">👮 保全與識別證</h4>
+                <p class="text-slate-700">
+                    傳統的權限 (chmod) 是看你是誰 (User)。<br>
+                    SELinux 是看你戴什麼「識別證」(Context)。<br>
+                    即使你是老闆 (Root)，如果你戴的是「清潔工」的識別證，保全 (SELinux) 就不會讓你進入「金庫」，不管你有沒有鑰匙。
+                </p>
+            </div>
+            <p class="mt-4 text-amber-900">核心觀念：<strong>Process (程序)</strong> 必須要有正確的 Context，才能存取有對應 Context 的 <strong>File (檔案)</strong>。</p>
+        </section>
+
+        <!-- 2. Modes -->
+        <section id="modes">
+            <h2><span class="section-num">2</span> 模式切換：Enforcing vs Permissive</h2>
+            
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">getenforce</span>
+<span class="cmd-output">Enforcing</span>
+<span class="cmd-comment"># 嚴格模式 (預設)。阻擋違規行為並記錄 Log。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">setenforce 0</span>
+<span class="cmd-comment"># 切換到 Permissive (寬容模式)。</span>
+<span class="cmd-comment"># 不會阻擋，只會跳出警告 Log。除錯時非常好用！</span>
+            </div>
+        </section>
+
+        <!-- 3. Context -->
+        <section id="context">
+            <h2><span class="section-num">3</span> 標籤管理：File Context</h2>
+            <p class="mb-4 text-amber-900">
+                網頁伺服器 (httpd) 只能讀取貼有 <code>httpd_sys_content_t</code> 標籤的檔案。
+                如果你自己建了一個網頁，但標籤貼錯了 (例如貼成 <code>admin_home_t</code>)，網頁就會打不開。
+            </p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">ls -Z /var/www/html/index.html</span>
+<span class="cmd-output">... httpd_sys_content_t ... index.html</span>
+<span class="cmd-comment"># -Z : 查看 SELinux Context</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">restorecon -Rv /var/www/html</span>
+<span class="cmd-comment"># 這是考試必殺技！</span>
+<span class="cmd-comment"># restorecon (Restore Context)：把檔案的標籤「恢復」成系統預設的正確標籤。</span>
+<span class="cmd-comment"># -R (Recursive), -v (Verbose)</span>
+            </div>
+
+            <p class="mt-4 text-amber-900 font-bold">如果要把非標準目錄 (例如 /web) 設為網頁目錄：</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">semanage fcontext -a -t httpd_sys_content_t "/web(/.*)?"</span>
+<span class="cmd-comment"># 在資料庫中「新增 (-a)」規則：/web 底下所有東西都是 httpd_sys_content_t。</span>
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">restorecon -Rv /web</span>
+<span class="cmd-comment"># 套用剛剛的設定。</span>
+            </div>
+        </section>
+
+        <!-- 4. Boolean -->
+        <section id="bool">
+            <h2><span class="section-num">4</span> 功能開關：SELinux Booleans</h2>
+            <p class="mb-4 text-amber-900">有時候我們不是要改檔案標籤，而是要開啟程式的某個功能（例如允許 httpd 連到資料庫）。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">getsebool -a | grep http</span>
+<span class="cmd-comment"># 列出所有跟 http 相關的開關。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">setsebool -P httpd_can_network_connect on</span>
+<span class="cmd-comment"># 開啟開關。</span>
+<span class="cmd-comment"># 注意！一定要加 -P (Persistent)，否則重開機就失效了 (考試陷阱)。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-yellow-500 mt-12">
+                <h2 class="text-2xl font-bold text-amber-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：修復網頁伺服器</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-amber-800">
+                    <li class="pl-2">
+                        <strong>製造問題：</strong>
+                        <br>在 <code>/root</code> 下建立一個檔案 <code>index.html</code>，然後把它 <code>mv</code> 到 <code>/var/www/html/</code>。
+                        <br>(因為是從 root 家目錄搬過來的，它會帶著 <code>admin_home_t</code> 的錯誤標籤)。
+                    </li>
+                    <li class="pl-2">
+                        <strong>驗證問題：</strong>
+                        <br>使用 <code>curl localhost</code> 測試，應該會出現 403 Forbidden (權限不足)，因為 SELinux 擋住了。
+                    </li>
+                    <li class="pl-2">
+                        <strong>修復 (restorecon)：</strong>
+                        <br>使用 <code>restorecon -Rv /var/www/html</code> 修正標籤。
+                    </li>
+                    <li class="pl-2">
+                        <strong>再次驗證：</strong>
+                        <br>使用 <code>curl localhost</code>，這次應該能成功看到網頁內容。
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEON ALGORITHM // 演算法視覺化核心</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="grid-background"></div>
+
+    <div class="main-interface">
+        <h1 class="cyber-glitch">NEON_ALGO_VISUALIZER // 核心啟動</h1>
+        
+        <div id="status-panel">
+            <span id="status-text">SYSTEM READY. 等待指令...</span>
+        </div>
+
+        <div id="display-area" class="data-grid">
+            </div>
+
+        <div class="controls-wrapper">
+            <div class="panel control-panel">
+                <h2><span class="icon">⚙️</span> 操作核心</h2>
+                <div class="button-group">
+                    <button onclick="resetArray()" class="cyber-btn red">
+                        <span class="btn-text">RESET // 重置系統</span>
+                    </button>
+                    <button onclick="shuffleArrayAnimated()" class="cyber-btn yellow">
+                        <span class="btn-text">SHUFFLE // 資料打散</span>
+                    </button>
+                    <button onclick="visualizeBubbleSort()" id="sortBtn" class="cyber-btn green">
+                        <span class="btn-text">SORT // 氣泡排序啟動</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel search-panel">
+                 <h2><span class="icon">🔍</span> 二元搜尋終端</h2>
+                <div class="search-box">
+                    <input type="number" id="searchInput" class="cyber-input" placeholder="輸入目標數字 (0-100)...">
+                     <button onclick="visualizeBinarySearch()" id="searchBtn" class="cyber-btn blue">
+                        <span class="btn-text">SEARCH // 開始掃描</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

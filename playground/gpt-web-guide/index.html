@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 輔助網頁設計：ChatGPT 應用全攻略</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="container">
+            <h1>🤖 ChatGPT 網頁設計</h1>
+            <nav>
+                <a href="#intro">簡介</a>
+                <a href="#basics">基礎問答</a>
+                <a href="#prompt-examples">實戰範例</a>
+                <a href="#advanced">進階應用</a>
+                <a href="#contact">聯繫</a>
+            </nav>
+        </div>
+    </header>
+
+<section id="intro" class="hero hero-gradient">
+        <div class="container">
+            <h2>利用 AI 🚀 加速您的網頁開發！</h2>
+            <p>本站整理了如何高效利用 ChatGPT 進行 HTML、CSS 和 JavaScript 開發的關鍵知識與實戰秘笈。</p>
+            <a href="#prompt-examples" class="cta-button cta-bold">立即學習實戰技巧</a>
+        </div>
+    </section>
+
+<section id="basics" class="section-qna">
+        <div class="container">
+            <h3>💬 基礎概念問與答</h3>
+            <p>點擊下方卡片，查看常見的 HTML/CSS 問題以及詢問 ChatGPT 的最佳方式。</p>
+
+            <div class="qna-grid">
+                <div class="qna-card" 
+                    data-title="HTML 的基本結構是什麼？" 
+                    data-content="<p><strong>定義：</strong> HTML 的基本結構包含 <code>&amp;lt;!DOCTYPE html&amp;gt;</code>、<code>&amp;lt;html&amp;gt;</code>、<code>&amp;lt;head&amp;gt;</code> 和 <code>&amp;lt;body&amp;gt;</code>。</p><p><code>&amp;lt;head&amp;gt;</code> 包含網頁的元數據和連結的樣式表 (CSS)，而 <code>&amp;lt;body&amp;gt;</code> 則是用戶實際看到的網頁內容。</p>">
+                    <span class="material-icons-outlined">html</span>
+                    <h4>HTML 的基本結構是什麼？</h4>
+                    <p>如何請 AI 快速生成一個完整的 HTML5 模板。</p>
+                </div>
+                <div class="qna-card" 
+                    data-title="標籤和 CSS 有什麼關係？"
+                    data-content="<p><strong>關係：</strong> HTML 標籤定義了<strong>網頁內容的結構和意義</strong>（例如：標題、段落）。</p><p>CSS（層疊樣式表）則定義了<strong>這些內容的呈現方式</strong>（例如：顏色、字體、位置）。</p><p>ChatGPT 可以幫您快速編寫結構清晰、樣式分離的程式碼。</p>">
+                    <span class="material-icons-outlined">style</span>
+                    <h4>標籤和 CSS 有什麼關係？</h4>
+                    <p>利用 ChatGPT 解釋元素與樣式表的連結原理。</p>
+                </div>
+                <div class="qna-card" 
+                    data-title="清單 (list) 如何設計？"
+                    data-content="<p><strong>設計：</strong> 清單通常使用 <code>&amp;lt;ul&amp;gt;</code> (無序) 或 <code>&amp;lt;ol&amp;gt;</code> (有序) 標籤。</p><p>要美化清單，通常會用 CSS 屬性 <code>list-style: none;</code> 移除預設符號，再使用 Flexbox 或 <code>display: inline-block;</code> 進行橫向排版。</p>">
+                    <span class="material-icons-outlined">list_alt</span>
+                    <h4>清單 (list) 如何設計？</h4>
+                    <p>詢問 AI 如何用 CSS 移除清單符號並橫向排列。</p>
+                </div>
+                <div class="qna-card" 
+                    data-title="如何插入圖片與超連結？"
+                    data-content="<p><strong>語法：</strong> 圖片使用 <code>&amp;lt;img src='...' alt='...'&amp;gt;</code>，其中 <code>alt</code> 是必備的可及性 (Accessibility) 屬性。</p><p>超連結使用 <code>&amp;lt;a href='...'&amp;gt;連結文字&amp;lt;/a&amp;gt;</code>。您可以要求 ChatGPT 檢查圖片的 <code>alt</code> 描述是否足夠語義化。</p>">
+                    <span class="material-icons-outlined">image</span>
+                    <h4>如何插入圖片與超連結？</h4>
+                    <p>讓 AI 撰寫帶有 `alt` 屬性的語義化圖片程式碼。</p>
+                </div>
+                
+                <div class="qna-card" 
+                    data-title="表格 (Table) 該怎麼寫？"
+                    data-content="<p><strong>結構：</strong> 表格使用 <code>&amp;lt;table&amp;gt;</code> 標籤，並由 <code>&amp;lt;tr&amp;gt;</code> (行) 和 <code>&amp;lt;td&amp;gt;</code> (資料格) 組成。可搭配 <code>&amp;lt;th&amp;gt;</code> 定義表頭。</p><p><strong>應用：</strong> 要求 ChatGPT 建立一個結構化的價格表或課程表。</p>">
+                    <span class="material-icons-outlined">grid_view</span>
+                    <h4>表格 (Table) 該怎麼寫？</h4>
+                    <p>請 AI 幫忙規劃一個美觀又易讀的表格結構。</p>
+                </div>
+
+                <div class="qna-card" 
+                    data-title="div 和 span 有什麼不同？"
+                    data-content="<p><strong>Block (區塊)：</strong> 如 <code>&amp;lt;div&amp;gt;</code>，會獨佔一行。</p><p><strong>Inline (內聯)：</strong> 如 <code>&amp;lt;span&amp;gt;</code>、<code>&amp;lt;a&amp;gt;</code>，只佔據內容所需的寬度，多個內聯元素會排在同一行。</p>">
+                    <span class="material-icons-outlined">space_dashboard</span>
+                    <h4>div 和 span 有什麼不同？</h4>
+                    <p>了解區塊和內聯元素對網頁排版的影響。</p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="skills" class="section-skills">
+        <div class="container">
+            <h3>🛠️ 提升效率的實戰秘笈快速導覽</h3>
+            <p>點擊下方的實戰範例區塊，學習如何精確提問。</p>
+
+            <div class="skills-grid">
+                <div class="skill-item">
+                    <span class="material-icons-outlined">code</span>
+                    <h4>語義化 HTML</h4>
+                </div>
+                <div class="skill-item">
+                    <span class="material-icons-outlined">grid_on</span>
+                    <h4>CSS 佈局</h4>
+                </div>
+                <div class="skill-item">
+                    <span class="material-icons-outlined">edit_note</span>
+                    <h4>JS 驗證邏輯</h4>
+                </div>
+                <div class="skill-item">
+                    <span class="material-icons-outlined">trending_up</span>
+                    <h4>SEO/性能優化</h4>
+                </div>
+            </div>
+        </div>
+    </section>
+
+   <section id="prompt-examples" class="section-prompt">
+        <div class="container">
+            <h3 class="prompt-header">🎯 Prompt 實戰：從提問到程式碼</h3>
+            <p class="prompt-subheader">學會這 6 個「提問範例」，讓 ChatGPT 成為您的程式設計師！</p>
+            
+            <div class="prompt-card">
+                <div class="prompt-title-bar">
+                    <span class="material-icons-outlined">code</span>
+                    <h4>1. 語義化 HTML 應用 (SEO 基礎)</h4>
+                </div>
+                <p><strong>提問範例 (Prompt)：</strong> 請為一個部落格文章頁面設計 HTML 結構。確保使用所有必要的 HTML5 語義標籤，例如 `&lt;header&gt;`、`&lt;nav&gt;`、`&lt;article&gt;`、`&lt;section&gt;` 和 `&lt;footer&gt;`。</p>
+                <div class="code-block">
+                    <pre><code>// ChatGPT 會輸出的程式碼骨架範例
+&lt;main&gt;
+    &lt;article&gt;
+        &lt;header&gt;
+            &lt;h1&gt;文章標題&lt;/h1&gt;
+            &lt;time datetime="2025-10-27"&gt;2025年10月27日&lt;/time&gt;
+        &lt;/header&gt;
+        &lt;section&gt;
+            &lt;p&gt;文章內容第一段...&lt;/p&gt;
+        &lt;/section&gt;
+        &lt;footer&gt;
+            &lt;p&gt;作者資訊...&lt;/p&gt;
+        &lt;/footer&gt;
+    &lt;/article&gt;
+&lt;/main&gt;</code></pre>
+                </div>
+            </div>
+
+            <div class="prompt-card">
+                <div class="prompt-title-bar">
+                    <span class="material-icons-outlined">grid_on</span>
+                    <h4>2. CSS Grid 與 Flexbox 佈局 (響應式設計)</h4>
+                </div>
+                <p><strong>提問範例 (Prompt)：</strong> 我需要一個響應式的三欄佈局。請給我一個使用 CSS Grid 的範例程式碼，要求主內容佔兩欄，側邊欄佔一欄，並且在手機上使用 Media Query 變成單一堆疊。</p>
+                <div class="code-block">
+                    <pre><code>/* ChatGPT 會輸出的 CSS 範例 */
+.container {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* 桌面：2:1 比例 */
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        grid-template-columns: 1fr; /* 手機：單欄堆疊 */
+    }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="prompt-card">
+                <div class="prompt-title-bar">
+                    <span class="material-icons-outlined">edit_note</span>
+                    <h4>3. 表單驗證邏輯生成 (JavaScript 應用)</h4>
+                </div>
+                <p><strong>提問範例 (Prompt)：</strong> 請撰寫一段簡單的 JavaScript 函數 `validateEmail(email)`，用來檢查輸入的電子郵件內容是否符合標準的電子郵件格式，並在不符合時回傳 `false`。</p>
+                <div class="code-block">
+                    <pre><code>// ChatGPT 會輸出的 JS 範例
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(String(email).toLowerCase());
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="prompt-card">
+                <div class="prompt-title-bar">
+                    <span class="material-icons-outlined">image_search</span>
+                    <h4>4. 圖片優化與 Lazy Loading (性能)</h4>
+                </div>
+                <p><strong>提問範例 (Prompt)：</strong> 我有大量圖片，請提供優化網頁載入速度的 HTML 語法，使圖片能在滾動到視窗時才載入（Lazy Loading），並建議最佳圖片格式。</p>
+                <div class="code-block">
+                    <pre><code>// ChatGPT 會輸出的 HTML 圖片優化範例
+&lt;!-- 關鍵是 loading="lazy" 屬性 --&gt;
+&lt;img src="placeholder.jpg" 
+     data-src="high_quality.webp" 
+     alt="圖片描述" 
+     loading="lazy"&gt;</code></pre>
+                </div>
+            </div>
+            
+            <div class="prompt-card">
+                <div class="prompt-title-bar">
+                    <span class="material-icons-outlined">animation</span>
+                    <h4>5. CSS 動畫與轉換 (視覺效果)</h4>
+                </div>
+                <p><strong>提問範例 (Prompt)：</strong> 我需要一個按鈕滑鼠懸停 (Hover) 時，背景顏色在 0.3 秒內平滑地從白色變為藍色，並且向上輕微位移 3 像素的 CSS 程式碼。</p>
+                <div class="code-block">
+                    <pre><code>/* ChatGPT 會輸出的 CSS 動畫範例 */
+.button {
+    transition: all 0.3s ease;
+}
+.button:hover {
+    background-color: #3498db;
+    transform: translateY(-3px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}</code></pre>
+                </div>
+            </div>
+            
+            <div class="prompt-card">
+                <div class="prompt-title-bar">
+                    <span class="material-icons-outlined">event</span>
+                    <h4>6. JavaScript 事件處理 (互動)</h4>
+                </div>
+                <p><strong>提問範例 (Prompt)：</strong> 請為一個 ID 為 `toggleBtn` 的按鈕，編寫一段 JS 程式碼。要求點擊時，讓 ID 為 `contentBox` 的元素在 CSS 類別 `hidden` 之間切換 (Toggle)。</p>
+                <div class="code-block">
+                    <pre><code>// ChatGPT 會輸出的 JS 範例
+document.getElementById('toggleBtn')
+    .addEventListener('click', function() {
+        document.getElementById('contentBox')
+            .classList.toggle('hidden');
+    });</code></pre>
+                </div>
+            </div>
+
+        </div>
+</section>
+
+    <section id="game-area" class="section-game">
+        <div class="container">
+            <h3 class="game-header">🎉 互動練習：CSS 屬性猜猜樂</h3>
+            <p class="game-subheader">利用你學到的知識，修正下方的程式碼錯誤！</p>
+
+            <div class="game-box">
+                <h4>修復挑戰 #1：水平居中！</h4>
+                <div class="problem-statement">
+                    <p>問題：如何讓這個**區塊**在父容器中**水平居中**？</p>
+                    <div id="target-box-container">
+                        <div id="target-box">我應該在中間！</div>
+                    </div>
+                </div>
+
+                <div class="options-container">
+                    <p>請選擇正確的 CSS 屬性：</p>
+                    <div class="options-grid">
+                        <button class="game-option" data-correct="false">display: inline-block;</button>
+                        <button class="game-option" data-correct="true">margin: 0 auto;</button>
+                        <button class="game-option" data-correct="false">text-align: center;</button>
+                    </div>
+                </div>
+                
+                <p id="game-feedback" class="feedback"></p>
+                <button id="reset-game" class="cta-button cta-bold" style="display: none;">再來一題</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="advanced" class="section-advanced">
+        <div class="container">
+            <h3>📈 進階應用與專業優化</h3>
+            <p>超越基礎編碼，利用 AI 進行更深層次的網頁優化與設計管理。</p>
+            
+            <div class="advanced-grid">
+                <div class="advanced-item">
+                    <span class="material-icons-outlined">trending_up</span>
+                    <h4>內容與 SEO 優化</h4>
+                    <p>利用 AI 分析關鍵字並生成 Meta 標籤和文章大綱，提升網頁搜尋排名。</p>
+                </div>
+                <div class="advanced-item">
+                    <span class="material-icons-outlined">design_services</span>
+                    <h4>設計系統文件生成</h4>
+                    <p>要求 AI 根據品牌風格，撰寫按鈕、顏色、字體等元件的設計規範文件。</p>
+                </div>
+                <div class="advanced-item">
+                    <span class="material-icons-outlined">analytics</span>
+                    <h4>程式碼除錯與分析</h4>
+                    <p>將出錯的程式碼貼給 AI，請它分析錯誤原因，並提出修復與重構建議。</p>
+                </div>
+                <div class="advanced-item">
+                    <span class="material-icons-outlined">accessibility_new</span>
+                    <h4>網頁可及性 (A11Y) 檢查</h4>
+                    <p>請 AI 檢查特定程式碼區塊是否符合 WCAG 標準，並修正顏色對比度不足等問題。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
+        <div class="container">
+            <p>&copy; 2025 AI 輔助網頁設計學習網 | 技術指導：G教授</p>
+        </div>
+    </footer>
+
+    <div id="qna-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h4 id="modal-title"></h4>
+            <div id="modal-body">
+                </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

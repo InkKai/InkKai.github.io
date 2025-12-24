@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智慧燈光控制 | CloudStay</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+
+    <style>
+        /* 調整容器對齊方式 (因為這頁內容比較長) */
+        body {
+            align-items: flex-start;
+            padding-top: 50px;
+        }
+
+        /* 燈光控制網格 */
+        .lights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 兩欄 */
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        /* 單個燈光卡片 */
+        .light-card {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            height: 140px;
+        }
+
+        /* 關燈狀態 (預設) */
+        .light-card .icon-circle {
+            width: 50px;
+            height: 50px;
+            background: #e0e0e0;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #777;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            transition: 0.3s;
+        }
+
+        .light-card .status {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        /* 開燈狀態 (active) */
+        .light-card.on {
+            background: #fff;
+            border-color: #f1c40f; /* 金黃邊框 */
+            box-shadow: 0 10px 20px rgba(241, 196, 15, 0.2);
+        }
+
+        .light-card.on .icon-circle {
+            background: #f1c40f;
+            color: white;
+            box-shadow: 0 0 15px #f1c40f;
+        }
+
+        .light-card.on .status {
+            color: #f1c40f;
+            font-weight: bold;
+        }
+
+        /* 全域控制按鈕區 */
+        .master-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .master-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .btn-on { background: #ffeaa7; color: #d35400; }
+        .btn-off { background: #dfe6e9; color: #636e72; }
+
+        .btn-on:active, .btn-off:active { transform: scale(0.95); }
+
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-btn">
+        <i class="fa-solid fa-chevron-left"></i>
+    </a>
+
+    <div class="container">
+        <h2>情境燈光</h2>
+        
+        <div class="lights-grid" id="lightsGrid">
+            </div>
+
+        <div class="master-controls">
+            <button class="master-btn btn-on" onclick="toggleAll(true)">全開</button>
+            <button class="master-btn btn-off" onclick="toggleAll(false)">全關</button>
+        </div>
+    </div>
+
+    <script src="js/lights.js"></script>
+    
+</body>
+</html>

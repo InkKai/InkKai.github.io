@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 5：檔案權限 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #334155; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #ef4444; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        h3 { font-size: 1.3rem; font-weight: 600; color: #334155; margin-top: 2.5rem; margin-bottom: 1rem; border-left: 4px solid #ef4444; padding-left: 1rem; }
+        
+        .section-num { background-color: #ef4444; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+
+        .cmd-block { background-color: #1e1e1e; color: #e5e5e5; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #ef4444; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fca5a5; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f1f5f9; text-align: left; padding: 1rem; border-bottom: 2px solid #cbd5e1; font-weight: 700; color: #1e293b; }
+        td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #f97316; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 1: RH124 基礎篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#intro" class="nav-item"><span class="nav-icon">01</span> 權限三部曲 (rwx)</a>
+            <a href="#read" class="nav-item"><span class="nav-icon">02</span> 讀懂 ls -l</a>
+            <a href="#chmod" class="nav-item"><span class="nav-icon">03</span> 更改權限 (chmod)</a>
+            <a href="#chown" class="nav-item"><span class="nav-icon">04</span> 更改擁有者 (chown)</a>
+            <a href="#special" class="nav-item"><span class="nav-icon">05</span> 特殊權限 (SUID)</a>
+            <a href="#lab" class="nav-item" style="color:#fca5a5;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+        <div class="absolute bottom-0 w-full p-6 border-t border-gray-800 bg-gray-900">
+            <a href="index.html" class="text-gray-400 hover:text-white text-sm"><i class="fas fa-arrow-left mr-2"></i> 回目錄</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 05</span>
+                <span class="text-slate-400 font-mono text-sm">RH124 Unit 7</span>
+            </div>
+            <h1>門禁森嚴：檔案權限與擁有者</h1>
+            <p class="text-xl text-slate-500 max-w-3xl leading-relaxed">
+                Linux 的安全核心就是「權限」。誰能看這個檔案？誰能執行這個程式？今天我們要學會解讀那些神秘的 <code>rwxr-xr-x</code> 代碼，並掌握修改它們的咒語。
+            </p>
+        </header>
+
+        <!-- 1. Intro -->
+        <section id="intro">
+            <h2><span class="section-num">1</span> 權限三部曲：r, w, x</h2>
+            
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🔐 門禁卡的比喻</h4>
+                <p class="text-slate-700">
+                    每個檔案都像一個房間，門上有三個鎖孔：
+                    <ul class="list-disc list-inside mt-2 ml-2">
+                        <li><strong>r (Read)</strong>：眼睛看。你可以看到房間裡有什麼（讀取檔案內容 / ls 列出目錄）。</li>
+                        <li><strong>w (Write)</strong>：筆寫。你可以更改房間裡的擺設（修改、刪除檔案 / 在目錄裡建檔）。</li>
+                        <li><strong>x (Execute)</strong>：進去執行。如果它是程式，你可以執行它；如果它是目錄，你可以 <code>cd</code> 進去。</li>
+                    </ul>
+                </p>
+            </div>
+        </section>
+
+        <!-- 2. ls -l -->
+        <section id="read">
+            <h2><span class="section-num">2</span> 解碼行動：讀懂 ls -l</h2>
+            
+            <p class="mb-4 text-slate-600">當你輸入 <code>ls -l</code>，你會看到類似 <code>-rwxr-xr--</code> 的東西。我們來拆解它：</p>
+
+            <div class="bg-white p-6 rounded shadow-sm border border-slate-200 font-mono text-lg text-center">
+                <span class="text-slate-400">-</span>
+                <span class="text-red-600 font-bold">rwx</span>
+                <span class="text-green-600 font-bold">r-x</span>
+                <span class="text-blue-600 font-bold">r--</span>
+            </div>
+            <div class="grid grid-cols-4 gap-4 text-center text-sm text-slate-500 mt-2">
+                <div>檔案類型<br>( -: 檔案, d: 目錄 )</div>
+                <div class="text-red-600">User (擁有者)<br>可以讀寫執行</div>
+                <div class="text-green-600">Group (群組)<br>可以讀和執行</div>
+                <div class="text-blue-600">Other (其他人)<br>只能讀</div>
+            </div>
+        </section>
+
+        <!-- 3. chmod -->
+        <section id="chmod">
+            <h2><span class="section-num">3</span> 更改權限：chmod (Change Mode)</h2>
+            <p class="mb-4 text-slate-600">有兩種改法：<strong>數字法</strong>（高手用）和 <strong>符號法</strong>（新手用）。</p>
+
+            <h3>數字法 (二進位加法)</h3>
+            <p class="text-slate-600 mb-2">r=4, w=2, x=1。把它們加起來。</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@localhost ~]$</span> <span class="cmd-input">chmod 755 script.sh</span>
+<span class="cmd-comment"># 7 = 4+2+1 (User: rwx)</span>
+<span class="cmd-comment"># 5 = 4+0+1 (Group: r-x)</span>
+<span class="cmd-comment"># 5 = 4+0+1 (Other: r-x)</span>
+            </div>
+
+            <h3>符號法 (直覺)</h3>
+            <p class="text-slate-600 mb-2">u=user, g=group, o=other, a=all。 +=加權限, -=減權限。</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@localhost ~]$</span> <span class="cmd-input">chmod u+x script.sh</span>
+<span class="cmd-comment"># 幫擁有者 (u) 加上執行 (x) 權限。</span>
+            </div>
+        </section>
+
+        <!-- 4. chown -->
+        <section id="chown">
+            <h2><span class="section-num">4</span> 更改擁有者：chown (Change Owner)</h2>
+            <p class="mb-4 text-slate-600">這個指令通常需要 sudo，因為你不能隨便把東西塞給別人。</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@localhost ~]#</span> <span class="cmd-input">chown tony:devops file.txt</span>
+<span class="cmd-comment"># 把 file.txt 送給 tony (User)，並歸類到 devops (Group)。</span>
+<span class="cmd-comment"># 格式：chown User:Group 檔名</span>
+
+<span class="cmd-prompt">[root@localhost ~]#</span> <span class="cmd-input">chown -R tony:devops /home/tony/project</span>
+<span class="cmd-comment"># -R (Recursive)：連資料夾裡面的東西一起改。</span>
+            </div>
+        </section>
+
+        <!-- 5. Special Perms -->
+        <section id="special">
+            <h2><span class="section-num">5</span> 特殊權限：SUID, SGID, Sticky</h2>
+            <div class="alert-box">
+                <p class="font-bold text-red-800">🔥 考試加分題</p>
+                <p class="text-slate-700">這三個特殊權限是進階考點。</p>
+            </div>
+            <table>
+                <tr>
+                    <th class="w-1/4">權限</th>
+                    <th>代碼</th>
+                    <th>功能</th>
+                </tr>
+                <tr>
+                    <td class="font-bold">SUID</td>
+                    <td class="font-mono">u+s</td>
+                    <td>執行時，<strong>暫時變身為檔案擁有者</strong>。例如 <code>passwd</code> 指令有 SUID，所以一般人執行它時，會暫時變成 root 去改密碼檔。</td>
+                </tr>
+                <tr>
+                    <td class="font-bold">SGID</td>
+                    <td class="font-mono">g+s</td>
+                    <td>用於目錄。在此目錄下建立的新檔案，<strong>自動繼承目錄的群組</strong>。適合部門共用資料夾。</td>
+                </tr>
+                <tr>
+                    <td class="font-bold">Sticky Bit</td>
+                    <td class="font-mono">o+t</td>
+                    <td>用於目錄（如 /tmp）。<strong>只有檔案擁有者才能刪除自己的檔案</strong>，別人不能亂刪。</td>
+                </tr>
+            </table>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-red-500 mt-12">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-none mt-0">🧪 今日實戰 Lab：機密文件保護</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-slate-700">
+                    <li class="pl-2">
+                        <strong>準備環境：</strong>
+                        <br>建立一個檔案 <code>secret.txt</code>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">touch secret.txt</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>權限設定 (chmod)：</strong>
+                        <br>設定權限：你自己可以讀寫，群組只能讀，其他人什麼都不能做 (640)。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">chmod 640 secret.txt</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>擁有者移交 (chown)：</strong>
+                        <br>將這個檔案送給使用者 <code>root</code> (需要 sudo)。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">sudo chown root secret.txt</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>驗收：</strong>
+                        <br>試著去讀取這個檔案，應該會看到 <strong>Permission denied</strong>。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm">cat secret.txt</code>
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

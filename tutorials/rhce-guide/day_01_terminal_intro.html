@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 1：Linux 的黑盒子 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- 核心設計系統 (Phase 1: Red) --- */
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #334155; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        
+        /* 側邊導覽列 */
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover, .nav-item.active { background-color: #1e293b; color: #f8fafc; border-left-color: #ef4444; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+
+        /* 主內容區 */
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        
+        /* 標題系統 */
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        h3 { font-size: 1.25rem; font-weight: 600; color: #334155; margin-top: 2rem; margin-bottom: 1rem; }
+        
+        /* 序號標記 */
+        .section-num { background-color: #ef4444; color: white; width: 2rem; height: 2rem; border-radius: 0.375rem; display: flex; align-items: center; justify-content: center; font-size: 1rem; margin-right: 0.75rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+
+        /* 代碼區塊 */
+        .cmd-block { background-color: #1e1e1e; color: #e5e5e5; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 4px solid #ef4444; overflow-x: auto; font-size: 0.9rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fca5a5; font-weight: bold; user-select: none; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.25rem; }
+        
+        /* 表格 */
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #e2e8f0; border-radius: 0.5rem; overflow: hidden; background: white; }
+        th { background-color: #f1f5f9; text-align: left; padding: 1rem; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #475569; }
+        td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        tr:last-child td { border-bottom: none; }
+        
+        /* 提示框 */
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 1.25rem; margin: 1.5rem 0; border-radius: 0.5rem; }
+        .tip-box { background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #22c55e; padding: 1.25rem; margin: 1.5rem 0; border-radius: 0.5rem; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #f97316; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+
+        /* 課程成就卡 */
+        .curriculum-card { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 3rem; border-radius: 1rem; margin-top: 6rem; position: relative; overflow: hidden; border: 1px solid #334155; }
+        .curriculum-badge { background-color: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid #ef4444; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: bold; margin-bottom: 1rem; display: inline-block; }
+
+        @media (max-width: 1024px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+            .sidebar.active { transform: translateX(0); }
+            .main-content { margin-left: 0; padding: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 手機版選單按鈕 (需配合 nav.js 或簡單 inline script) -->
+    <button class="fixed top-4 right-4 z-50 bg-slate-800 text-white p-2 rounded lg:hidden" onclick="document.querySelector('.sidebar').classList.toggle('active')">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- 側邊導覽列 -->
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 1: RH124 基礎篇</p>
+        </div>
+        
+        <div class="py-4">
+            <a href="#intro" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-terminal"></i></span> 終端機觀念
+            </a>
+            <a href="#syntax" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-code"></i></span> 指令語法
+            </a>
+            <a href="#nav" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-compass"></i></span> 導航 (cd/pwd)
+            </a>
+            <a href="#ls" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-list"></i></span> 列表 (ls)
+            </a>
+            <a href="#help" class="nav-item">
+                <span class="nav-icon"><i class="fas fa-life-ring"></i></span> 救命手冊 (man)
+            </a>
+             <a href="#lab" class="nav-item" style="color: #fca5a5;">
+                <span class="nav-icon"><i class="fas fa-flask"></i></span> 今日實戰 Lab
+            </a>
+            <a href="#summary" class="nav-item" style="color: #93c5fd;">
+                <span class="nav-icon"><i class="fas fa-trophy"></i></span> 課程成就結算
+            </a>
+        </div>
+    </nav>
+
+    <!-- 主內容 -->
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex gap-3 mb-4">
+                <span class="px-3 py-1 bg-red-100 text-red-700 rounded-full text-xs font-bold border border-red-200">Day 01</span>
+                <span class="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-bold border border-slate-200">RH124 Unit 1, 2, 4</span>
+            </div>
+            <h1>Linux 的黑盒子：終端機與指令基礎</h1>
+            <p class="text-lg text-slate-500 max-w-3xl">
+                恭喜你踏出第一步！今天我們要揭開 Linux 最神秘的面紗——黑底白字的「終端機」。別怕，它不是駭客專屬的工具，它只是你跟電腦對話的「麥克風」。
+            </p>
+        </header>
+
+        <!-- 1. Intro -->
+        <section id="intro" class="scroll-mt-20">
+            <h2><span class="section-num">1</span> 核心觀念：Shell 與 Kernel</h2>
+            
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">🍟 麥當勞點餐的比喻</h4>
+                <p class="text-slate-700">
+                    <strong>圖形介面 (GUI)：</strong> 就像是用「自助點餐機」。螢幕上有什麼圖片，你就只能點什麼。功能受限。<br><br>
+                    <strong>命令列介面 (CLI)：</strong> 就像是直接走進「廚房」，跟主廚面對面說話。「我要大麥克去醬加蛋」。只要你會講「廚房術語」（指令），主廚（系統核心）就能為你做任何事。
+                </p>
+            </div>
+
+            <div class="mt-6 p-4 bg-white border border-slate-200 rounded-lg">
+                <ul class="list-disc list-inside space-y-2 text-slate-700">
+                    <li><strong>Kernel (核心)</strong>：硬體資源的管理者（大腦），只懂 0101。</li>
+                    <li><strong>Shell (殼)</strong>：你的翻譯官。把你的英文指令 (<code>ls</code>) 翻譯給核心聽。RHEL 預設使用 <strong>Bash</strong>。</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 2. Syntax -->
+        <section id="syntax" class="scroll-mt-20">
+            <h2><span class="section-num">2</span> 指令語法結構</h2>
+            <p class="mb-4 text-slate-600">Linux 指令就像英文句子，有固定的文法：</p>
+            
+            <div class="bg-white p-6 rounded-lg border border-slate-200 text-center font-mono text-lg shadow-sm">
+                <span class="text-red-600 font-bold">Command</span> 
+                <span class="text-slate-400 mx-2">+</span> 
+                <span class="text-blue-600 font-bold">-Options</span> 
+                <span class="text-slate-400 mx-2">+</span> 
+                <span class="text-green-600 font-bold">Arguments</span>
+            </div>
+            <p class="text-center text-sm text-slate-500 mt-2">（動詞） + （副詞/修飾） + （受詞）</p>
+
+            <div class="alert-box">
+                <h4 class="font-bold text-red-800 mb-1"><i class="fas fa-exclamation-triangle mr-2"></i> 考試常見錯誤</h4>
+                <p class="text-sm text-red-700">
+                    1. <strong>大小寫敏感</strong>：<code>Date</code> 和 <code>date</code> 是不一樣的。<br>
+                    2. <strong>空白鍵</strong>：指令與參數之間一定要有空格。錯誤範例：<code>ls-l</code>。
+                </p>
+            </div>
+        </section>
+
+        <!-- 3. Navigation -->
+        <section id="nav" class="scroll-mt-20">
+            <h2><span class="section-num">3</span> 導航與路徑概念</h2>
+            <p class="mb-4 text-slate-600">這是新手最容易迷路的地方。請牢記這張地圖：</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">pwd</span>
+<span class="cmd-output">/home/student</span>
+<span class="cmd-comment"># Print Working Directory (我在哪？)</span>
+
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">cd /etc</span>
+<span class="cmd-comment"># Change Directory (移動到 /etc)</span>
+            </div>
+
+            <table class="mt-4">
+                <thead>
+                    <tr>
+                        <th class="w-1/4">符號</th>
+                        <th>意義</th>
+                        <th>範例</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="font-bold font-mono text-blue-600">~</td>
+                        <td>家目錄 (Home)</td>
+                        <td><code>cd ~</code> (馬上回家)</td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold font-mono text-blue-600">..</td>
+                        <td>上一層 (Parent)</td>
+                        <td><code>cd ..</code> (往回走一步)</td>
+                    </tr>
+                    <tr>
+                        <td class="font-bold font-mono text-blue-600">.</td>
+                        <td>這裡 (Current)</td>
+                        <td><code>./script.sh</code> (執行這裡的程式)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <!-- 4. LS -->
+        <section id="ls" class="scroll-mt-20">
+            <h2><span class="section-num">4</span> 檔案列表 (ls) 進階</h2>
+            <p class="mb-4 text-slate-600"><code>ls</code> 不只是列出檔案，它是你的眼睛。</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">ls -lha</span>
+<span class="cmd-comment"># -l : 長列表 (詳細資訊)</span>
+<span class="cmd-comment"># -h : 人類可讀大小 (顯示 KB, MB 而不是 Bytes)</span>
+<span class="cmd-comment"># -a : 顯示隱藏檔 (以 . 開頭的檔案)</span>
+<span class="cmd-output">drwxr-xr-x. 2 student student 4.0K Nov 30 10:00 .
+drwxr-xr-x. 3 root    root      20 Nov 30 09:00 ..
+-rw-------. 1 student student  500 Nov 30 10:00 .bash_history</span>
+            </div>
+        </section>
+
+        <!-- 5. Help -->
+        <section id="help" class="scroll-mt-20">
+            <h2><span class="section-num">5</span> 獲取幫助 (Man Page)</h2>
+            <p class="mb-4 text-slate-600 font-bold">考試時沒有 Google，只有 Man Page。這是你的救命稻草。</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@host ~]$</span> <span class="cmd-input">man passwd</span>
+<span class="cmd-comment"># 進入手冊模式...</span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mt-4 text-sm">
+                <div class="bg-slate-100 p-3 rounded"><strong>Space</strong>：往下翻一頁</div>
+                <div class="bg-slate-100 p-3 rounded"><strong>b</strong>：往上翻一頁 (Back)</div>
+                <div class="bg-slate-100 p-3 rounded"><strong>/關鍵字</strong>：搜尋 (例如 <code>/-l</code>)</div>
+                <div class="bg-slate-100 p-3 rounded"><strong>q</strong>：離開 (Quit)</div>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab" class="scroll-mt-20">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-4 border-red-500">
+                <h2 class="mt-0 mb-6 border-none"><i class="fas fa-flask text-red-500 mr-3"></i> 今日實戰 Lab</h2>
+                <div class="space-y-4">
+                    <p class="text-slate-700">請開啟終端機，完成以下任務：</p>
+                    <ol class="list-decimal list-inside space-y-2 text-slate-600 ml-2">
+                        <li>使用 <code>whoami</code> 確認身份，<code>pwd</code> 確認位置。</li>
+                        <li>進入 <code>/usr/share/doc</code> 目錄。</li>
+                        <li>列出該目錄下所有以 <code>z</code> 開頭的檔案 (提示: <code>ls z*</code>)。</li>
+                        <li>使用 <code>cd</code> 快速回到家目錄。</li>
+                        <li>查閱 <code>date</code> 的 man page，找出如何顯示 UTC 時間的參數 (<code>date -u</code>)。</li>
+                    </ol>
+                </div>
+            </div>
+        </section>
+
+        <!-- 課程成就結算 (Unified Footer) -->
+        <section id="summary" class="scroll-mt-20 mb-12">
+            <div class="curriculum-card">
+                <span class="curriculum-badge">RHCSA 戰鬥力分析</span>
+                <h3 class="text-3xl font-bold mb-6">Day 1 課程成就解鎖</h3>
+                
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <p class="text-slate-400 mb-4 text-sm uppercase tracking-wide font-bold">已掌握的原廠單元</p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-red-400 mt-1 mr-3"></i>
+                                <div>
+                                    <strong class="text-white block">RH124 Unit 1: Getting Started</strong>
+                                    <span class="text-slate-400 text-sm">理解 Linux 核心與 Shell 概念。</span>
+                                </div>
+                            </li>
+                            <li class="flex items-start">
+                                <i class="fas fa-check-circle text-red-400 mt-1 mr-3"></i>
+                                <div>
+                                    <strong class="text-white block">RH124 Unit 2: CLI Access</strong>
+                                    <span class="text-slate-400 text-sm">熟悉登入、Prompt、語法結構。</span>
+                                </div>
+                            </li>
+                             <li class="flex items-start">
+                                <i class="fas fa-check-circle text-red-400 mt-1 mr-3"></i>
+                                <div>
+                                    <strong class="text-white block">RH124 Unit 4: Getting Help</strong>
+                                    <span class="text-slate-400 text-sm">學會使用 man pages 查找參數。</span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="border-l border-slate-700 pl-8 flex flex-col justify-center">
+                        <p class="text-slate-300 mb-4">
+                            "你已經踏出了最重要的一步。學會查 Man Page，你就擁有了解決 80% 未知問題的能力。"
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

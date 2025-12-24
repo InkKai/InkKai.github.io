@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 10：軟體安裝 | RHCSA 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; color: #334155; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #f8fafc; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #ef4444; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #f8fafc; border-left-color: #ef4444; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0f172a; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #ef4444; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e5e5e5; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #ef4444; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #fca5a5; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #cbd5e1; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f1f5f9; text-align: left; padding: 1rem; border-bottom: 2px solid #cbd5e1; font-weight: 700; color: #1e293b; }
+        td { padding: 1rem; border-bottom: 1px solid #e2e8f0; vertical-align: top; }
+        .analogy-box { background-color: #fff7ed; border: 1px solid #ffedd5; border-left: 5px solid #f97316; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCSA 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 1: RH124 基礎篇</p>
+        </div>
+        <div class="py-4">
+            <a href="#concept" class="nav-item"><span class="nav-icon">01</span> App Store 概念</a>
+            <a href="#dnf" class="nav-item"><span class="nav-icon">02</span> 安裝與搜尋 (dnf)</a>
+            <a href="#repo" class="nav-item"><span class="nav-icon">03</span> 軟體倉庫 (Repo)</a>
+            <a href="#update" class="nav-item"><span class="nav-icon">04</span> 更新系統</a>
+            <a href="#lab" class="nav-item" style="color:#fca5a5;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-red-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 10</span>
+                <span class="text-slate-400 font-mono text-sm">RH124 Unit 14</span>
+            </div>
+            <h1>軟體管家與時光機：YUM/DNF 與打包</h1>
+            <p class="text-xl text-slate-500 max-w-3xl leading-relaxed">
+                恭喜完成 Phase 1！今天是基礎篇的最後一課。我們要學習如何像使用 App Store 一樣安裝軟體，並且學會如果安裝錯了，如何用「時光機」復原。
+            </p>
+        </header>
+
+        <!-- 1. Concept -->
+        <section id="concept">
+            <h2><span class="section-num">1</span> 軟體安裝：RPM 與 DNF</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-orange-800 text-lg mb-2">📦 網購與超商的比喻</h4>
+                <p class="text-slate-700">
+                    <ul class="list-disc list-inside space-y-2">
+                        <li><strong>RPM (Red Hat Package Manager)</strong>：就像是「單獨下載的 APK 檔」。你必須自己解決所有問題（例如：安裝 A 需要先裝 B，RPM 不會幫你下載 B）。</li>
+                        <li><strong>DNF (Dandified YUM)</strong>：就像「App Store」。它會幫你自動計算依賴關係。你只要說「我要裝 A」，它會自動幫你下載 A 和 B，並裝好。</li>
+                    </ul>
+                </p>
+            </div>
+            <p class="text-slate-600 mt-4 text-sm">註：<code>yum</code> 是舊版指令，現在 RHEL 8/9 中，<code>yum</code> 其實就是 <code>dnf</code> 的連結。兩個通用，但建議用 <code>dnf</code>。</p>
+        </section>
+
+        <!-- 2. dnf -->
+        <section id="dnf">
+            <h2><span class="section-num">2</span> 軟體操作：dnf</h2>
+            <p class="mb-4 text-slate-600">這是你最常用的指令。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf search "web server"</span>
+<span class="cmd-comment"># 搜尋軟體。不知道軟體確切名稱時用。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf install httpd</span>
+<span class="cmd-comment"># 安裝軟體。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf remove httpd</span>
+<span class="cmd-comment"># 移除軟體。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf list installed</span>
+<span class="cmd-comment"># 列出已經安裝的軟體。</span>
+            </div>
+        </section>
+
+        <!-- 3. Repo -->
+        <section id="repo">
+            <h2><span class="section-num">3</span> 軟體倉庫：Repository (Repo)</h2>
+            <p class="mb-4 text-slate-600">
+                DNF 去哪裡下載軟體？答案是 <strong>Repo</strong>。
+                設定檔通常放在 <code>/etc/yum.repos.d/</code> 目錄下，副檔名必須是 <code>.repo</code>。
+            </p>
+
+            <div class="bg-slate-100 p-4 rounded border border-slate-300 font-mono text-sm">
+                <p class="text-slate-500 mb-2"># 範例 Repo 檔案內容</p>
+                <div class="text-slate-800">
+                    [BaseOS]<br>
+                    name=Red Hat Enterprise Linux 9 - BaseOS<br>
+                    baseurl=https://cdn.redhat.com/...<br>
+                    enabled=1<br>
+                    gpgcheck=1
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Update -->
+        <section id="update">
+            <h2><span class="section-num">4</span> 系統更新與時光機</h2>
+            
+            <h3 class="text-lg font-bold mt-4">更新系統</h3>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf update</span>
+<span class="cmd-comment"># 更新所有軟體到最新版。</span>
+            </div>
+
+            <h3 class="text-lg font-bold mt-4">DNF History (後悔藥)</h3>
+            <p class="text-slate-600">不小心裝錯軟體，或是更新後系統壞了怎麼辦？</p>
+            <div class="cmd-block">
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf history</span>
+<span class="cmd-comment"># 查看操作歷史紀錄 (會顯示 ID, 時間, 做了什麼)。</span>
+
+<span class="cmd-prompt">[root@host ~]#</span> <span class="cmd-input">dnf history undo 5</span>
+<span class="cmd-comment"># 復原 ID 為 5 的那次操作。太神啦！</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-red-500 mt-12">
+                <h2 class="text-2xl font-bold text-slate-800 mb-6 border-none mt-0">🧪 今日實戰 Lab：軟體安裝與復原</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-slate-700">
+                    <li class="pl-2">
+                        <strong>搜尋軟體：</strong>
+                        <br>搜尋一個叫做 <code>tmux</code> 的終端機多工軟體。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">dnf search tmux</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>安裝軟體：</strong>
+                        <br>安裝它。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">sudo dnf install tmux -y</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>檢查歷史：</strong>
+                        <br>查看 DNF 的操作紀錄，找出剛剛安裝的那筆 ID。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">dnf history</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>時光倒流：</strong>
+                        <br>使用 <code>undo</code> 指令移除剛剛安裝的 tmux (模擬安裝錯了要復原)。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">sudo dnf history undo [ID]</code>
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day 21：Ansible 架構 | RHCE 30天戰鬥版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f0f9ff; color: #0c4a6e; line-height: 1.8; }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+        .sidebar { position: fixed; top: 0; left: 0; height: 100vh; width: 280px; background-color: #0f172a; color: #94a3b8; overflow-y: auto; z-index: 50; border-right: 1px solid #1e293b; }
+        .sidebar-header { padding: 1.5rem; border-bottom: 1px solid #1e293b; }
+        .sidebar-title { font-size: 1.1rem; font-weight: 800; color: #38bdf8; letter-spacing: 0.05em; }
+        .sidebar-subtitle { font-size: 0.75rem; font-weight: 700; color: #0ea5e9; text-transform: uppercase; margin-top: 0.25rem; letter-spacing: 0.1em; } 
+        .nav-item { display: block; padding: 0.75rem 1.5rem; transition: all 0.2s; border-left: 3px solid transparent; text-decoration: none; color: #94a3b8; font-size: 0.95rem; }
+        .nav-item:hover { background-color: #1e293b; color: #38bdf8; border-left-color: #0ea5e9; }
+        .nav-icon { width: 1.5rem; display: inline-block; text-align: center; margin-right: 0.5rem; }
+        .main-content { margin-left: 280px; padding: 3rem 4rem; max-width: 1200px; }
+        h1 { font-size: 2.5rem; font-weight: 800; color: #0c4a6e; margin-bottom: 1.5rem; letter-spacing: -0.025em; }
+        h2 { font-size: 1.75rem; font-weight: 700; color: #0369a1; border-bottom: 2px solid #bae6fd; padding-bottom: 0.75rem; margin-top: 4rem; margin-bottom: 1.5rem; display: flex; align-items: center; }
+        .section-num { background-color: #0ea5e9; color: white; width: 2.5rem; height: 2.5rem; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+        .cmd-block { background-color: #1e1e1e; color: #e0f2fe; padding: 1.5rem; border-radius: 0.5rem; font-family: 'JetBrains Mono', monospace; margin: 1.5rem 0; border-left: 5px solid #0ea5e9; overflow-x: auto; font-size: 0.95rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .cmd-prompt { color: #38bdf8; font-weight: bold; user-select: none; margin-right: 0.5rem; }
+        .cmd-input { color: #fff; font-weight: bold; }
+        .cmd-comment { color: #6b7280; font-style: italic; display: block; margin-top: 0.5rem; margin-left: 1rem; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 1.5rem 0; border: 1px solid #7dd3fc; border-radius: 0.5rem; overflow: hidden; background: white; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        th { background-color: #f0f9ff; text-align: left; padding: 1rem; border-bottom: 2px solid #7dd3fc; font-weight: 700; color: #0369a1; }
+        td { padding: 1rem; border-bottom: 1px solid #bae6fd; vertical-align: top; }
+        .analogy-box { background-color: #f0f9ff; border: 1px solid #bae6fd; border-left: 5px solid #0ea5e9; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        .alert-box { background-color: #fef2f2; border: 1px solid #fecaca; border-left: 5px solid #ef4444; padding: 1.5rem; margin: 2rem 0; border-radius: 0.5rem; }
+        @media (max-width: 1024px) { .sidebar { display: none; } .main-content { margin-left: 0; padding: 1.5rem; } }
+    </style>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">RHCE 30天戰鬥版</h2>
+            <p class="sidebar-subtitle">PHASE 3: RH294 自動化</p>
+        </div>
+        <div class="py-4">
+            <a href="#intro" class="nav-item"><span class="nav-icon">01</span> 自動化萬能遙控器</a>
+            <a href="#install" class="nav-item"><span class="nav-icon">02</span> 安裝 Ansible</a>
+            <a href="#inventory" class="nav-item"><span class="nav-icon">03</span> 主機清單 (Inventory)</a>
+            <a href="#config" class="nav-item"><span class="nav-icon">04</span> 設定檔 (ansible.cfg)</a>
+            <a href="#adhoc" class="nav-item"><span class="nav-icon">05</span> 臨時指令 (Ad-Hoc)</a>
+            <a href="#lab" class="nav-item" style="color:#38bdf8;"><span class="nav-icon">🧪</span> 今日實戰 Lab</a>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="mb-12">
+            <div class="flex items-center gap-3 mb-4">
+                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs font-bold tracking-widest">DAY 21</span>
+                <span class="text-blue-800 font-mono text-sm">RH294 Unit 1, 2</span>
+            </div>
+            <h1>Ansible 初探：環境建置與架構</h1>
+            <p class="text-xl text-sky-900 max-w-3xl leading-relaxed">
+                恭喜進入 RHCE 自動化階段！現在我們不只要會做菜，還要學會「指揮機器人做菜」。Ansible 是目前最紅的自動化工具，因為它簡單、免代理程式 (Agentless)。
+            </p>
+        </header>
+
+        <!-- 1. Intro -->
+        <section id="intro">
+            <h2><span class="section-num">1</span> 什麼是 Ansible？</h2>
+            <div class="analogy-box">
+                <h4 class="font-bold text-sky-700 text-lg mb-2">🎮 萬能遙控器的比喻</h4>
+                <p class="text-slate-700">
+                    以前你要設定 100 台伺服器，得像跑到每一台電視機前去轉台（SSH 進去打指令）。<br>
+                    <strong>Ansible</strong> 就像一把「萬能遙控器」。你只要在控制主機 (Control Node) 按下按鈕，紅外線 (SSH) 就會發射出去，100 台受控主機 (Managed Nodes) 就會同時轉台。
+                </p>
+            </div>
+            <p class="mt-4 text-sky-900 font-bold">Ansible 的三大優點：</p>
+            <ul class="list-disc list-inside space-y-2 text-slate-700 ml-4">
+                <li><strong>Agentless</strong>：不用在受控端裝軟體，只要有 SSH 和 Python 就行。</li>
+                <li><strong>Idempotent (冪等性)</strong>：這是最重要的觀念！不管執行幾次，結果都一樣。如果已經裝好了，它就不會再裝一次（不會報錯）。</li>
+                <li><strong>YAML</strong>：使用人類看得懂的語言寫劇本。</li>
+            </ul>
+        </section>
+
+        <!-- 2. Install -->
+        <section id="install">
+            <h2><span class="section-num">2</span> 安裝 Ansible</h2>
+            <p class="mb-4 text-slate-600">在 RHEL 9 中，Ansible 包含在 <code>ansible-core</code> 套件中。</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">sudo dnf install ansible-core -y</span>
+<span class="cmd-comment"># 安裝核心套件。</span>
+
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible --version</span>
+<span class="cmd-comment"># 檢查版本。</span>
+            </div>
+        </section>
+
+        <!-- 3. Inventory -->
+        <section id="inventory">
+            <h2><span class="section-num">3</span> 點名簿：Inventory</h2>
+            <p class="mb-4 text-slate-600">你要控制誰？這些主機名單寫在 Inventory 檔案裡。常用 <strong>INI</strong> 格式。</p>
+
+            <div class="bg-white p-6 rounded shadow border border-sky-200 font-mono text-sm">
+                <div class="text-slate-500 mb-2"># inventory 檔案範例</div>
+                <div class="text-slate-800">
+                    [webservers]<br>
+                    servera.lab.example.com<br>
+                    serverb.lab.example.com<br>
+                    <br>
+                    [dbservers]<br>
+                    serverc.lab.example.com<br>
+                    <br>
+                    [all:vars]<br>
+                    ansible_user=devops
+                </div>
+            </div>
+            <p class="mt-2 text-sm text-slate-500">群組 (如 [webservers]) 讓你一次控制一類機器。</p>
+        </section>
+
+        <!-- 4. Config -->
+        <section id="config">
+            <h2><span class="section-num">4</span> 設定檔：ansible.cfg</h2>
+            <p class="mb-4 text-slate-600">Ansible 怎麼知道 Inventory 在哪？怎麼知道要用哪個帳號登入？</p>
+
+            <div class="alert-box">
+                <p class="font-bold text-red-800">🔥 優先權陷阱 (必考)</p>
+                <ol class="list-decimal list-inside text-slate-700 mt-2">
+                    <li><code>ANSIBLE_CONFIG</code> 環境變數 (最高)</li>
+                    <li><strong><code>./ansible.cfg</code> (目前目錄，最常用)</strong></li>
+                    <li><code>~/.ansible.cfg</code> (家目錄)</li>
+                    <li><code>/etc/ansible/ansible.cfg</code> (全域預設，最低)</li>
+                </ol>
+            </div>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">vim ansible.cfg</span>
+<span class="cmd-input">[defaults]</span>
+<span class="cmd-input">inventory = ./inventory</span>
+<span class="cmd-input">remote_user = devops</span>
+<span class="cmd-input">ask_pass = false</span>
+<span class="cmd-comment"># 設定預設 Inventory 位置和登入帳號。</span>
+
+<span class="cmd-input">[privilege_escalation]</span>
+<span class="cmd-input">become = true</span>
+<span class="cmd-input">become_method = sudo</span>
+<span class="cmd-input">become_user = root</span>
+<span class="cmd-input">become_ask_pass = false</span>
+<span class="cmd-comment"># 設定自動提權 (sudo)。</span>
+            </div>
+        </section>
+
+        <!-- 5. Ad-Hoc -->
+        <section id="adhoc">
+            <h2><span class="section-num">5</span> 臨時指令 (Ad-Hoc Commands)</h2>
+            <p class="mb-4 text-slate-600">不用寫劇本，直接下指令。適合測試或簡單任務。</p>
+            <p class="font-mono bg-slate-100 p-2 rounded">語法：ansible [主機/群組] -m [模組] -a "[參數]"</p>
+
+            <div class="cmd-block">
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible all -m ping</span>
+<span class="cmd-comment"># 測試所有主機連線 (ping 模組)。</span>
+
+<span class="cmd-prompt">[student@control ~]$</span> <span class="cmd-input">ansible webservers -m command -a "id"</span>
+<span class="cmd-comment"># 在 webservers 群組執行 "id" 指令。</span>
+            </div>
+        </section>
+
+        <!-- Lab -->
+        <section id="lab">
+            <div class="bg-white p-8 rounded-xl shadow-lg border-l-8 border-sky-500 mt-12">
+                <h2 class="text-2xl font-bold text-sky-900 mb-6 border-none mt-0">🧪 今日實戰 Lab：打造控制中心</h2>
+                
+                <ol class="list-decimal list-inside space-y-4 text-sky-800">
+                    <li class="pl-2">
+                        <strong>準備環境：</strong>
+                        <br>建立目錄 <code>~/ansible-lab</code> 並進入。
+                    </li>
+                    <li class="pl-2">
+                        <strong>建立 Inventory：</strong>
+                        <br>建立 <code>inventory</code> 檔案，內容包含：
+                        <br><code>[web]</code>
+                        <br><code>servera</code>
+                        <br><code>localhost</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>建立設定檔：</strong>
+                        <br>建立 <code>ansible.cfg</code>，指向剛剛的 inventory，並關閉 host_key_checking (方便測試)。
+                        <br><code>[defaults]</code>
+                        <br><code>inventory = ./inventory</code>
+                        <br><code>host_key_checking = false</code>
+                    </li>
+                    <li class="pl-2">
+                        <strong>測試連線：</strong>
+                        <br>使用 Ad-Hoc 指令測試。
+                        <br><code class="bg-gray-100 px-2 py-1 text-sm text-red-600">ansible all -m ping</code>
+                    </li>
+                </ol>
+            </div>
+        </section>
+    </main>
+
+    <!-- 自動導覽列 -->
+    <script src="nav.js"></script>
+</body>
+</html>
