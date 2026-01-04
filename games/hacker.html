@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>SYSTEM BREACH // BINARY SEARCH</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+        :root {
+            --neon-green: #0f0;
+            --neon-red: #ff003c;
+            --neon-blue: #00f3ff;
+            --bg-color: #050505;
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        body {
+            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--neon-green);
+            font-family: 'Share Tech Mono', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 0 10px var(--neon-green);
+        }
+
+        /* CRT 螢幕掃描線效果 */
+        body::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 10;
+            background-size: 100% 2px, 3px 100%;
+            pointer-events: none;
+        }
+
+        /* 介面容器 */
+        .cyber-container {
+            position: relative;
+            z-index: 2;
+            width: 90%;
+            max-width: 1000px;
+            border: 2px solid var(--neon-green);
+            padding: 20px;
+            background: rgba(0, 20, 0, 0.3);
+            box-shadow: 0 0 20px var(--neon-green), inset 0 0 20px var(--neon-green);
+            backdrop-filter: blur(5px);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 3rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            border-bottom: 2px solid var(--neon-green);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        h1::after {
+            content: "V.2.0.77";
+            font-size: 0.8rem;
+            position: absolute;
+            right: 0;
+            bottom: 5px;
+            color: var(--neon-blue);
+        }
+
+        /* 控制台 */
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        input {
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: var(--neon-blue);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.5rem;
+            padding: 10px;
+            width: 100px;
+            text-align: center;
+            text-shadow: 0 0 5px var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            outline: none;
+        }
+
+        button {
+            background: var(--neon-red);
+            color: black;
+            border: none;
+            padding: 10px 30px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.2rem;
+            cursor: pointer;
+            font-weight: bold;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px var(--neon-red);
+            transition: 0.2s;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        }
+
+        button:hover {
+            background: white;
+            box-shadow: 0 0 25px white;
+            transform: scale(1.05);
+        }
+
+        button:disabled {
+            background: #333;
+            color: #777;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        /* 資料陣列區 */
+        .grid-display {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+            perspective: 1000px;
+        }
+
+        .data-block {
+            width: 40px;
+            height: 60px;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            background: rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        /* 狀態樣式 */
+        .data-block.scanning {
+            background: var(--neon-blue);
+            color: black;
+            transform: scale(1.3) translateZ(50px);
+            box-shadow: 0 0 30px var(--neon-blue);
+            z-index: 10;
+            border-color: white;
+        }
+
+        .data-block.eliminated {
+            opacity: 0.1;
+            transform: scale(0.8);
+            filter: grayscale(100%);
+            border-color: #333;
+        }
+
+        .data-block.found {
+            background: var(--neon-green);
+            color: black;
+            transform: scale(1.5) rotate(360deg);
+            box-shadow: 0 0 50px var(--neon-green), 0 0 100px var(--neon-green);
+            z-index: 20;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        /* 終端機訊息區 */
+        .terminal {
+            background: black;
+            border: 1px solid #333;
+            height: 150px;
+            padding: 10px;
+            overflow-y: auto;
+            text-align: left;
+            font-size: 0.9rem;
+            color: #ccc;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+        }
+
+        .log-line {
+            margin: 2px 0;
+            border-bottom: 1px solid #111;
+        }
+
+        .log-line.success { color: var(--neon-green); font-weight: bold; }
+        .log-line.warn { color: var(--neon-red); }
+        .log-line.info { color: var(--neon-blue); }
+
+        /* 全螢幕震動動畫 */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+
+        .shake-screen {
+            animation: shake 0.5s;
+            animation-iteration-count: infinite;
+        }
+        
+        .glitch-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: white;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 99;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="glitch-overlay" id="flash"></div>
+
+    <div class="cyber-container" id="mainContainer">
+        <h1>OMEGA SEARCH <span style="font-size:12px; vertical-align:middle;">// PROTOCOL: BINARY</span></h1>
+        
+        <div class="controls">
+            <div>
+                TARGET_ID: <input type="number" id="targetVal" value="42" min="1" max="100">
+            </div>
+            <button onclick="initiateSequence()">INITIATE HACK</button>
+            <button onclick="resetSystem()" style="background:transparent; border:1px solid #555; color:#555; box-shadow:none;">RESET</button>
+        </div>
+
+        <div class="grid-display" id="grid">
+            </div>
+
+        <div class="terminal" id="console">
+            <div class="log-line">> SYSTEM READY...</div>
+            <div class="log-line">> WAITING FOR INPUT...</div>
+        </div>
+    </div>
+
+    <script>
+        // 設定參數
+        const ARRAY_SIZE = 50; // 產生 50 個數據
+        let data = [];
+        let isRunning = false;
+        
+        const grid = document.getElementById('grid');
+        const terminal = document.getElementById('console');
+        const container = document.getElementById('mainContainer');
+        const flash = document.getElementById('flash');
+
+        // 初始化系統
+        function resetSystem() {
+            grid.innerHTML = '';
+            data = [];
+            isRunning = false;
+            container.classList.remove('shake-screen');
+            
+            // 產生排序過的亂數資料
+            let current = 1;
+            for(let i=0; i<ARRAY_SIZE; i++) {
+                current += Math.floor(Math.random() * 3) + 1;
+                data.push(current);
+                
+                let el = document.createElement('div');
+                el.className = 'data-block';
+                el.id = `block-${i}`;
+                el.innerText = current;
+                // 加入一點隨機延遲動畫
+                el.style.animation = `fadeIn 0.5s ${i * 0.02}s forwards`;
+                grid.appendChild(el);
+            }
+            
+            log("SYSTEM REBOOTED.", "info");
+            log("DATA ARRAY SORTED & INDEXED.", "info");
+        }
+
+        // 終端機記錄
+        function log(msg, type="") {
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            // 加入時間戳記
+            const time = new Date().toLocaleTimeString('en-US', {hour12: false}) + "." + Math.floor(Math.random()*999);
+            line.innerText = `[${time}] > ${msg}`;
+            terminal.appendChild(line);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // 核心：駭客視覺化演算法
+        async function initiateSequence() {
+            if(isRunning) return;
+            
+            const target = parseInt(document.getElementById('targetVal').value);
+            if(!target) {
+                log("ERROR: INVALID TARGET PARAMETER", "warn");
+                return;
+            }
+
+            isRunning = true;
+            log(`INITIATING SEARCH PROTOCOL FOR TARGET [ ${target} ]...`, "info");
+            
+            let low = 0;
+            let high = data.length - 1;
+            let found = false;
+            let step = 0;
+
+            while (low <= high) {
+                step++;
+                let mid = Math.floor((low + high) / 2);
+                let midVal = data[mid];
+                let midEl = document.getElementById(`block-${mid}`);
+
+                // 1. 鎖定掃描 (Scanning Effect)
+                midEl.classList.add('scanning');
+                log(`CYCLE ${step}: SCANNING SECTOR [INDEX ${mid}] -> VALUE ${midVal}...`);
+                
+                // 等待動畫
+                await new Promise(r => setTimeout(r, 800));
+
+                if (midVal === target) {
+                    // 2. 找到目標 (Success Effect)
+                    found = true;
+                    midEl.classList.remove('scanning');
+                    midEl.classList.add('found');
+                    
+                    // 觸發全螢幕震動與閃光
+                    container.classList.add('shake-screen');
+                    flash.style.opacity = "0.8";
+                    flash.style.transition = "opacity 0.1s";
+                    setTimeout(() => flash.style.opacity = "0", 100);
+
+                    log(`>> TARGET ACQUIRED AT INDEX ${mid} <<`, "success");
+                    log(`>> DECRYPTION COMPLETE.`, "success");
+                    break;
+                } else {
+                    // 3. 排除區域 (Elimination Effect)
+                    midEl.classList.remove('scanning');
+                    
+                    if (midVal < target) {
+                        log(`VALUE ${midVal} TOO LOW. PURGING LEFT SECTOR...`, "warn");
+                        // 視覺化排除左邊
+                        for(let i=low; i<=mid; i++) {
+                            document.getElementById(`block-${i}`).classList.add('eliminated');
+                            // 隨機延遲消失效果
+                            await new Promise(r => setTimeout(r, 20));
+                        }
+                        low = mid + 1;
+                    } else {
+                        log(`VALUE ${midVal} TOO HIGH. PURGING RIGHT SECTOR...`, "warn");
+                        // 視覺化排除右邊
+                        for(let i=mid; i<=high; i++) {
+                            document.getElementById(`block-${i}`).classList.add('eliminated');
+                            await new Promise(r => setTimeout(r, 20));
+                        }
+                        high = mid - 1;
+                    }
+                }
+                
+                // 每個循環稍微停頓
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            if (!found) {
+                log(">> SEARCH COMPLETED. TARGET NOT FOUND IN DATABASE.", "warn");
+                container.style.border = "2px solid red";
+                container.classList.add('shake-screen');
+                setTimeout(()=>container.classList.remove('shake-screen'), 500);
+            }
+            
+            isRunning = false;
+        }
+
+        // 啟動時先產生資料
+        resetSystem();
+
+    </script>
+</body>
+</html>
