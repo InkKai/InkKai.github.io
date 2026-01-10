@@ -3,92 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧雲端門鎖</title>
+    <title>CloudStay | 門鎖控制</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/style.css">
-
     <style>
-        .container {
-            width: 300px; /* 稍微窄一點比較好看 */
-            padding: 40px;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, '微軟正黑體', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* 鎖頭按鈕本體 */
-        .lock-btn {
-            width: 160px;
-            height: 160px;
-            border-radius: 50%;
-            border: none;
-            color: white;
-            font-size: 4rem;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 彈跳效果 */
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        body {
+            /* 1. 統一背景圖 */
+            background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin: 0 auto 30px auto; /* 置中 */
-            outline: none;
+            height: 100vh;
+            padding: 20px;
         }
 
-        .lock-btn:active {
-            transform: scale(0.95);
+        /* 2. 毛玻璃效果容器 */
+        .container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.9); /* 稍微不透明一點，強調安全性 */
+            backdrop-filter: blur(20px);
+            padding: 40px 30px;
+            border-radius: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            width: 100%;
+            max-width: 360px;
+            position: relative;
         }
 
-        /* 上鎖狀態 (紅色) */
-        .lock-btn.locked {
-            background: linear-gradient(135deg, #ff6b6b, #ee5253);
-            box-shadow: 0 10px 25px rgba(238, 82, 83, 0.4);
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            text-decoration: none;
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            transition: color 0.3s;
+        }
+        .back-btn:hover { color: #2c3e50; }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            margin-top: 10px;
+        }
+
+        .subtitle {
+            color: #95a5a6;
+            font-size: 0.9rem;
+            margin-bottom: 40px;
+        }
+
+        /* 鎖的按鈕本體 */
+        .lock-wrapper {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 30px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .lock-btn {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 50px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 呼吸燈動畫波紋 */
+        .pulse-ring {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            z-index: 1;
+            opacity: 0;
+        }
+
+        /* 鎖定狀態 (紅色) */
+        .locked {
+            background: linear-gradient(145deg, #ff6b81, #ff4757);
+            color: white;
         }
 
         /* 解鎖狀態 (綠色) */
-        .lock-btn.unlocked {
-            background: linear-gradient(135deg, #1dd1a1, #10ac84);
-            box-shadow: 0 10px 25px rgba(16, 172, 132, 0.4);
+        .unlocked {
+            background: linear-gradient(145deg, #7bed9f, #2ed573);
+            color: white;
+            box-shadow: 0 10px 30px rgba(46, 213, 115, 0.4);
         }
 
-        /* 連線中 (讀取動畫) */
-        .lock-btn.loading {
-            animation: pulse 1s infinite;
-            cursor: wait;
-            opacity: 0.8;
+        /* 解鎖時的動畫效果 */
+        .unlocked ~ .pulse-ring {
+            animation: pulse-animation 2s infinite;
+            background: rgba(46, 213, 115, 0.3);
         }
 
-        /* 狀態文字 */
+        @keyframes pulse-animation {
+            0% { transform: scale(1); opacity: 0.6; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
         .status-text {
-            font-size: 1.2rem;
-            color: #555;
+            font-size: 1.4rem;
             font-weight: bold;
-            min-height: 1.5em; /* 預留高度避免文字跳動 */
+            color: #2c3e50;
+            margin-bottom: 5px;
+            min-height: 32px;
         }
 
-        /* 呼吸燈動畫 */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(0.95); opacity: 0.7; }
-            100% { transform: scale(1); }
+        .last-log {
+            font-size: 0.85rem;
+            color: #bdc3c7;
+            margin-bottom: 30px;
+            min-height: 20px;
         }
+
+        /* 3. 底部硬體資訊欄 */
+        .device-info {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .loading {
+            pointer-events: none;
+            opacity: 0.8;
+            transform: scale(0.95);
+        }
+
+        /* 旋轉動畫給 loading 用 */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
     </style>
 </head>
 <body>
 
-    <a href="index.html" class="back-btn">
-        <i class="fa-solid fa-chevron-left"></i>
-    </a>
-
     <div class="container">
-        <h2>門鎖控制</h2>
+        <a href="index.html" class="back-btn">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
 
-        <button id="lockBtn" class="lock-btn locked" onclick="toggleLock()">
-            <i id="icon" class="fa-solid fa-lock"></i>
-        </button>
+        <h2>房門門鎖</h2>
+        <p class="subtitle">Room 702 • 智慧安全系統</p>
+        
+        <div class="lock-wrapper">
+            <button id="lockBtn" class="lock-btn locked" onclick="toggleLock()">
+                <i class="fa-solid fa-lock" id="icon"></i>
+            </button>
+            <div class="pulse-ring"></div>
+        </div>
 
         <p class="status-text" id="statusText">已上鎖</p>
+        <p class="last-log" id="lastLog">等待操作...</p>
+
+        <div class="device-info">
+            <div class="info-item">
+                <i class="fa-solid fa-battery-three-quarters"></i>
+                <span>85%</span>
+            </div>
+            <div class="info-item">
+                <i class="fa-solid fa-wifi"></i>
+                <span>連線良好</span>
+            </div>
+            <div class="info-item">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>安全</span>
+            </div>
+        </div>
     </div>
 
-    <script src="js/lock.js"></script>
-    
+    <script>
+        let isLocked = true; 
+        const btn = document.getElementById('lockBtn');
+        const icon = document.getElementById('icon');
+        const text = document.getElementById('statusText');
+        const log = document.getElementById('lastLog');
+
+        function toggleLock() {
+            // 讀取效果
+            btn.classList.add('loading');
+            const originalIcon = icon.className;
+            icon.className = "fa-solid fa-circle-notch fa-spinner"; // 轉圈圈圖示
+            text.innerText = "驗證權限中...";
+
+            setTimeout(() => {
+                isLocked = !isLocked; 
+
+                if (isLocked) {
+                    // 上鎖邏輯
+                    btn.classList.remove('unlocked');
+                    btn.classList.add('locked');
+                    icon.className = "fa-solid fa-lock";
+                    text.innerText = "已上鎖";
+                    text.style.color = "#2c3e50";
+                } else {
+                    // 解鎖邏輯
+                    btn.classList.remove('locked');
+                    btn.classList.add('unlocked');
+                    icon.className = "fa-solid fa-lock-open";
+                    text.innerText = "歡迎回來";
+                    text.style.color = "#2ed573";
+                    
+                    // 更新時間紀錄
+                    const now = new Date();
+                    const timeString = now.getHours().toString().padStart(2, '0') + ":" + 
+                                     now.getMinutes().toString().padStart(2, '0');
+                    log.innerText = "上次解鎖時間: " + timeString;
+                }
+                
+                btn.classList.remove('loading');
+
+            }, 800); // 稍微增加一點時間讓轉圈圈看得見
+        }
+    </script>
 </body>
 </html>

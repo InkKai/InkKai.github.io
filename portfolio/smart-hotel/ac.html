@@ -5,31 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智慧冷氣控制</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/style.css">
-
     <style>
-        /* 遙控器本體 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '微軟正黑體', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            /* 配合首頁的背景圖，保持一致性 */
+            background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
         .ac-controller {
-            background: white;
+            background: rgba(255, 255, 255, 0.95); /* 稍微帶點透明度 */
+            backdrop-filter: blur(10px);
             width: 320px;
             padding: 30px;
             border-radius: 30px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
             text-align: center;
             transition: all 0.5s ease;
             position: relative;
             overflow: hidden;
         }
 
-        /* 關機狀態的樣式 */
         .ac-controller.off {
             filter: grayscale(100%);
             opacity: 0.8;
             background: #e0e0e0;
         }
 
-        /* 顯示螢幕區域 */
+        /* 顯示螢幕區域 - 預設藍色 (冷氣) */
         .display-screen {
             background: linear-gradient(135deg, #6dd5fa 0%, #2980b9 100%);
             color: white;
@@ -43,11 +57,16 @@
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            transition: all 0.3s;
+            transition: background 0.8s ease; /* 顏色轉換時有漸變動畫 */
+        }
+
+        /* 新增：暖氣模式的橘色背景 */
+        .display-screen.heat-mode {
+            background: linear-gradient(135deg, #f6d365 0%, #ff7e5f 100%);
         }
 
         .ac-controller.off .display-screen {
-            background: #333; /* 關機時螢幕變黑 */
+            background: #333;
             color: #444;
         }
 
@@ -64,25 +83,19 @@
 
         .mode-text {
             margin-top: 10px;
-            font-size: 1rem;
-            opacity: 0.9;
+            font-size: 1.1rem; /* 稍微加大字體 */
+            opacity: 0.95;
         }
 
-        /* 關機時顯示的文字 */
         .off-text {
             display: none;
             font-size: 1.5rem;
             color: #555;
         }
-        .ac-controller.off .off-text {
-            display: block;
-        }
+        .ac-controller.off .off-text { display: block; }
         .ac-controller.off .temp-display, 
-        .ac-controller.off .mode-text {
-            display: none;
-        }
+        .ac-controller.off .mode-text { display: none; }
 
-        /* 按鈕區域 */
         .controls {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -102,17 +115,13 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        .btn:active {
-            transform: scale(0.95);
-        }
+        .btn:active { transform: scale(0.95); }
 
-        /* 溫度按鈕 */
         .btn-temp {
             background: white;
             border: 2px solid #eee;
         }
 
-        /* 電源按鈕特別樣式 */
         .power-btn {
             width: 60px;
             height: 60px;
@@ -127,39 +136,30 @@
             transition: all 0.3s;
         }
 
-        .power-btn:hover {
-            transform: scale(1.1);
-        }
+        .power-btn:hover { transform: scale(1.1); }
 
-        /* 開機狀態下的電源燈號模擬 */
-        .indicator {
-            width: 8px;
-            height: 8px;
-            background: #2ed573;
-            border-radius: 50%;
+        /* 返回按鈕 (回到首頁用) */
+        .back-link {
             position: absolute;
             top: 20px;
-            right: 20px;
-            box-shadow: 0 0 10px #2ed573;
-            transition: 0.3s;
+            left: 20px;
+            color: #333;
+            font-size: 1.2rem;
+            text-decoration: none;
+            opacity: 0.5;
+            transition: opacity 0.3s;
+            z-index: 10;
         }
-        
-        .ac-controller.off .indicator {
-            background: #555;
-            box-shadow: none;
-        }
+        .back-link:hover { opacity: 1; }
+
     </style>
 </head>
 <body>
 
-    <a href="index.html" class="back-btn">
-        <i class="fa-solid fa-chevron-left"></i>
-    </a>
+    <a href="index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i></a>
 
     <div class="ac-controller" id="controller">
-        <div class="indicator"></div>
-
-        <div class="display-screen">
+        <div class="display-screen" id="displayScreen">
             <div class="temp-display" id="tempText">26<span class="unit">°C</span></div>
             <div class="mode-text" id="modeText">
                 <i class="fa-solid fa-snowflake"></i> 冷氣模式
@@ -188,7 +188,64 @@
         </button>
     </div>
 
-    <script src="js/ac.js"></script>
-    
+    <script>
+        let powerOn = true;
+        let temperature = 26;
+        
+        // 1. 在這裡新增了 '暖氣模式' 和對應的火焰圖示 'fa-fire'
+        let modes = ['冷氣模式', '暖氣模式', '除濕模式', '送風模式'];
+        let modeIcons = ['fa-snowflake', 'fa-fire', 'fa-droplet', 'fa-wind'];
+        
+        let currentModeIndex = 0;
+
+        const controller = document.getElementById('controller');
+        const displayScreen = document.getElementById('displayScreen'); // 抓取螢幕元素
+        const tempText = document.getElementById('tempText');
+        const modeText = document.getElementById('modeText');
+
+        function togglePower() {
+            powerOn = !powerOn;
+            if (powerOn) {
+                controller.classList.remove('off');
+            } else {
+                controller.classList.add('off');
+            }
+        }
+
+        function changeTemp(amount) {
+            if (!powerOn) return;
+            temperature += amount;
+            if (temperature > 32) temperature = 32; // 暖氣通常可以調高一點
+            if (temperature < 16) temperature = 16;
+            updateDisplay();
+        }
+
+        function changeMode() {
+            if (!powerOn) return;
+            currentModeIndex = (currentModeIndex + 1) % modes.length;
+            updateDisplay();
+        }
+
+        function toggleFan() {
+            if (!powerOn) return;
+            // 為了不干擾畫面，改用 console log 或簡單提示
+            // alert("風速切換"); 
+        }
+
+        function updateDisplay() {
+            // 更新數字
+            tempText.innerHTML = `${temperature}<span class="unit">°C</span>`;
+            
+            // 更新模式文字與圖示
+            modeText.innerHTML = `<i class="fa-solid ${modeIcons[currentModeIndex]}"></i> ${modes[currentModeIndex]}`;
+
+            // 2. 判斷邏輯：如果是暖氣模式，加上橘色背景 class；否則移除
+            if (modes[currentModeIndex] === '暖氣模式') {
+                displayScreen.classList.add('heat-mode');
+            } else {
+                displayScreen.classList.remove('heat-mode');
+            }
+        }
+    </script>
 </body>
 </html>

@@ -5,14 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>辦理退房 | CloudStay</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/style.css">
-
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '微軟正黑體', sans-serif;
+        }
+
+        body {
+            /* 1. 統一背景圖 */
+            background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        /* 為了讓文字在背景上更清楚，加一點深色遮罩 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.1); 
+            z-index: -1;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 400px;
+            
+            /* 2. 毛玻璃效果容器 */
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 返回按鈕 */
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #7f8c8d;
+            font-size: 1.2rem;
+            text-decoration: none;
+            transition: color 0.3s;
+            z-index: 5;
+        }
+        .back-link:hover { color: #2c3e50; }
+
         /* 標題區 */
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
+            margin-top: 10px;
+        }
+
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 5px;
         }
 
         .subtitle {
@@ -22,65 +80,74 @@
 
         /* 帳單明細卡 */
         .bill-card {
-            background: #f8f9fa;
-            border-radius: 15px;
+            background: rgba(255, 255, 255, 0.6); /* 更透明一點 */
+            border-radius: 20px;
             padding: 20px;
             margin-bottom: 25px;
-            border: 1px solid #eee;
+            border: 1px solid rgba(0,0,0,0.05);
         }
 
         .bill-row {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             font-size: 0.95rem;
             color: #555;
         }
 
         .bill-row.total {
-            border-top: 2px dashed #ddd;
-            padding-top: 10px;
-            margin-top: 10px;
+            border-top: 2px dashed #bdc3c7;
+            padding-top: 15px;
+            margin-top: 15px;
             font-weight: bold;
             color: #2c3e50;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
         }
 
         /* 評分星星 */
         .rating-section {
             text-align: center;
             margin-bottom: 30px;
+            background: rgba(255,255,255,0.6);
+            padding: 15px;
+            border-radius: 20px;
         }
 
         .rating-title {
             font-size: 0.9rem;
             color: #666;
             margin-bottom: 10px;
+            font-weight: bold;
         }
 
         .stars {
             font-size: 2rem;
-            color: #ddd;
+            color: #dcdde1;
             cursor: pointer;
+            display: flex;
+            justify-content: center;
+            gap: 5px;
         }
 
         .stars i {
-            transition: color 0.2s;
-            margin: 0 2px;
+            transition: transform 0.2s, color 0.2s;
         }
 
+        .stars i:hover { transform: scale(1.2); }
+
         .stars i.active {
-            color: #f1c40f; /* 金黃色 */
+            color: #f1c40f; 
+            text-shadow: 0 2px 5px rgba(241, 196, 15, 0.3);
         }
 
         /* 按鈕 */
         .btn-checkout {
             width: 100%;
-            padding: 15px;
+            padding: 18px;
             background: #2c3e50;
             color: white;
             border: none;
-            border-radius: 12px;
+            border-radius: 15px;
             font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
@@ -89,11 +156,13 @@
             justify-content: center;
             align-items: center;
             gap: 10px;
+            box-shadow: 0 10px 20px rgba(44, 62, 80, 0.2);
         }
 
         .btn-checkout:hover {
-            background: #1a252f;
+            background: #34495e;
             transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(44, 62, 80, 0.3);
         }
 
         /* --- 處理中的覆蓋層 (Loading) --- */
@@ -103,7 +172,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(255, 255, 255, 0.98);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -111,8 +181,7 @@
             z-index: 10;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s;
-            border-radius: 25px; /* 讓遮罩也跟著圓角 */
+            transition: opacity 0.5s;
         }
 
         .processing-overlay.show {
@@ -121,49 +190,51 @@
         }
 
         .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #2c3e50;
+            width: 60px;
+            height: 60px;
+            border: 6px solid #f3f3f3;
+            border-top: 6px solid #2c3e50;
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
 
         .status-msg {
             font-weight: bold;
             color: #2c3e50;
-            margin-bottom: 5px;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
         }
         
         .sub-status {
-            font-size: 0.8rem;
-            color: #999;
+            font-size: 0.9rem;
+            color: #95a5a6;
         }
 
         /* --- 完成畫面 (Success) --- */
         .check-icon {
-            font-size: 4rem;
+            font-size: 5rem;
             color: #2ed573;
             margin-bottom: 20px;
-            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-shadow: 0 10px 30px rgba(46, 213, 115, 0.3);
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes popIn { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+        @keyframes popIn { 0% { transform: scale(0); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
     </style>
 </head>
 <body>
 
-    <a href="index.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
-
     <div class="container">
         
+        <a href="index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i></a>
+
         <div id="checkoutContent">
             <header>
                 <h2>辦理退房</h2>
-                <p class="subtitle">Room 702 - 尊爵套房</p>
+                <p class="subtitle">Room 702 • 尊爵套房</p>
             </header>
 
             <div class="bill-card">
@@ -211,7 +282,77 @@
         </div>
     </div>
 
-    <script src="js/checkout.js"></script>
+    <script>
+        // 星星評分邏輯
+        const stars = document.querySelectorAll('.stars i');
+        let currentRating = 0;
 
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                const value = parseInt(star.getAttribute('data-value'));
+                currentRating = value;
+                updateStars(value);
+            });
+        });
+
+        function updateStars(value) {
+            stars.forEach(star => {
+                const starVal = parseInt(star.getAttribute('data-value'));
+                if (starVal <= value) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+
+        // 退房流程模擬
+        function startCheckout() {
+            if (currentRating === 0) {
+                alert("請幫我們評分後再退房喔！謝謝您的支持 🙏");
+                return;
+            }
+
+            if(!confirm("確定要現在退房嗎？\n系統將自動結算並關閉房間電源。")) return;
+
+            const overlay = document.getElementById('overlay');
+            const msg = document.getElementById('msg');
+            const subMsg = document.getElementById('subMsg');
+            const spinner = document.getElementById('spinner');
+            const successIcon = document.getElementById('successIcon');
+
+            // 1. 顯示遮罩
+            overlay.classList.add('show');
+
+            // 2. 模擬一連串的系統動作
+            setTimeout(() => {
+                msg.innerText = "付款確認成功";
+                subMsg.innerText = "電子發票已寄送至您的信箱";
+            }, 2000);
+
+            setTimeout(() => {
+                msg.innerText = "正在關閉房間電源...";
+                subMsg.innerText = "Smart Home System Shutting Down...";
+            }, 4000);
+
+            setTimeout(() => {
+                msg.innerText = "正在鎖定房門...";
+                subMsg.innerText = "Locking Door Security...";
+            }, 6000);
+
+            // 3. 完成
+            setTimeout(() => {
+                spinner.style.display = 'none';
+                successIcon.style.display = 'block';
+                msg.innerText = "退房手續完成";
+                subMsg.innerText = "感謝您的入住，期待再次光臨 CloudStay";
+                
+                // 3秒後自動跳轉回首頁 (可選)
+                setTimeout(() => {
+                    // window.location.href = 'index.html'; 
+                }, 3000);
+            }, 8000);
+        }
+    </script>
 </body>
 </html>

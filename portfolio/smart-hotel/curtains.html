@@ -5,132 +5,213 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>智慧窗簾 | CloudStay</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/style.css">
-
     <style>
-        /* 覆蓋全域設定：這頁要是深色背景 */
-        body {
-            background-color: #2c3e50; 
-            overflow: hidden;
-            flex-direction: column; /* 讓內容垂直排列 */
-        }
-
-        /* 覆蓋全域設定：這頁的 container 不要變成白卡片，要透明，因為我們有另外的面板 */
-        .container {
-            background: transparent;
-            box-shadow: none;
+        * {
+            box-sizing: border-box;
+            margin: 0;
             padding: 0;
-            max-width: 500px;
+            font-family: '微軟正黑體', sans-serif;
+            user-select: none;
         }
 
-        /* 標題要變白色 */
+        body {
+            /* 1. 換上統一的房間背景圖 */
+            background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative; /* 為了放遮罩 */
+        }
+
+        /* 2. 加上深藍色遮罩，讓房間看起來像是「晚上關燈」的感覺，配合窗外夜景 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(44, 62, 80, 0.85); /* 深藍色半透明，透出一點點背景圖 */
+            backdrop-filter: blur(3px); /* 稍微模糊背景 */
+            z-index: -1;
+        }
+
+        /* 返回按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            font-size: 1.2rem;
+            color: #fff;
+            text-decoration: none;
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+            transition: 0.3s;
+            z-index: 10;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
         h2 {
             color: white;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            letter-spacing: 1px;
         }
 
-        /* --- 窗戶模擬區域 (保留原本的設計) --- */
+        /* --- 窗戶區域 --- */
         .window-frame {
             width: 300px;
-            height: 350px; /* 稍微調小一點點以適應畫面 */
-            background: url('https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?q=80&w=1974&auto=format&fit=crop');
+            height: 400px;
+            /* 你的夜景圖 */
+            background: url('https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?q=80&w=1974&auto=format&fit=crop'); 
             background-size: cover;
             background-position: center;
-            border: 10px solid #444;
-            border-radius: 10px;
+            border: 12px solid #34495e; 
+            border-radius: 15px;
             margin: 0 auto 30px auto;
             position: relative;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6); 
+            overflow: hidden; 
         }
 
+        /* 玻璃反光效果 */
         .window-frame::after {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 50%);
+            background: linear-gradient(120deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 40%, rgba(255,255,255,0.05) 100%);
             pointer-events: none;
             z-index: 5;
         }
 
-        .curtain-left, .curtain-right {
+        /* 窗簾布料樣式 */
+        .curtain {
             position: absolute;
-            top: 0; height: 100%; width: 50%;
-            background: repeating-linear-gradient(90deg, #dcdde1, #dcdde1 10px, #bdc3c7 10px, #bdc3c7 20px);
-            transition: width 0.1s linear;
-            z-index: 2;
+            top: 0;
+            height: 100%;
+            width: 50%; 
+            background: repeating-linear-gradient(90deg, #95a5a6, #95a5a6 15px, #7f8c8d 15px, #7f8c8d 30px);
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); 
+            z-index: 3;
         }
-        .curtain-left { left: 0; box-shadow: 5px 0 15px rgba(0,0,0,0.3); }
-        .curtain-right { right: 0; box-shadow: -5px 0 15px rgba(0,0,0,0.3); }
 
+        .curtain.left {
+            left: 0;
+            border-right: 1px solid rgba(0,0,0,0.3);
+        }
+
+        .curtain.right {
+            right: 0;
+            border-left: 1px solid rgba(0,0,0,0.3);
+        }
+
+        /* 窗紗 */
         .sheer-curtain {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(2px);
+            background: rgba(255, 255, 255, 0.15); 
+            backdrop-filter: blur(1px);
             z-index: 1;
             pointer-events: none;
         }
 
-        /* --- 控制面板 (這才是這頁的白卡片) --- */
+        /* --- 控制面板 --- */
         .control-panel {
-            background: white;
+            /* 3. 面板改用毛玻璃，讓背景透出來一點 */
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
             padding: 25px;
-            border-radius: 20px;
+            border-radius: 25px;
             width: 90%;
             margin: 0 auto;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .percentage {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            display: block;
+        }
+        
+        .status-text {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-bottom: 20px;
         }
 
         .slider-container {
-            margin-top: 10px;
+            margin: 20px 0;
+            position: relative;
         }
 
-        /* 這裡的滑桿樣式已經被 style.css 取代了，所以移除了 */
-
-        .status-labels {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 10px;
-            color: #666;
-            font-size: 0.9rem;
-            font-weight: bold;
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #dfe6e9;
+            outline: none;
         }
-        
-        .percentage {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 10px;
-            display: block;
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #2c3e50;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(44, 62, 80, 0.4);
+            transition: transform 0.1s;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
         }
 
         .presets {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 12px;
             justify-content: center;
+            margin-top: 25px;
         }
 
         .preset-btn {
-            padding: 8px 15px;
-            border: 1px solid #ccc;
-            background: #f8f9fa;
-            border-radius: 8px;
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: #f1f2f6;
+            color: #2c3e50;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 0.9rem;
+            font-weight: bold;
             transition: 0.2s;
         }
 
-        .preset-btn:hover {
+        .preset-btn:hover, .preset-btn.active {
             background: #2c3e50;
             color: white;
-            border-color: #2c3e50;
         }
+
     </style>
 </head>
-<body class="dark-mode">
+<body>
 
     <a href="index.html" class="back-btn">
         <i class="fa-solid fa-chevron-left"></i>
@@ -140,32 +221,52 @@
         <h2>智慧窗簾控制</h2>
 
         <div class="window-frame">
-            <div class="curtain-left" id="curtainLeft"></div>
-            <div class="curtain-right" id="curtainRight"></div>
-            <div class="sheer-curtain"></div> 
+            <div class="sheer-curtain"></div>
+            <div class="curtain left" id="curtainLeft"></div>
+            <div class="curtain right" id="curtainRight"></div>
         </div>
 
         <div class="control-panel">
-            <span class="percentage" id="percentText">0% 開啟</span>
+            <span class="percentage" id="percentNum">0%</span>
+            <span class="status-text" id="statusText">窗簾狀態：已完全關閉</span>
             
             <div class="slider-container">
                 <input type="range" min="0" max="100" value="0" id="curtainSlider" oninput="updateCurtains(this.value)">
             </div>
             
-            <div class="status-labels">
-                <span>關閉 (Close)</span>
-                <span>開啟 (Open)</span>
-            </div>
-
             <div class="presets">
                 <button class="preset-btn" onclick="setCurtain(0)">全關</button>
-                <button class="preset-btn" onclick="setCurtain(50)">半開</button>
+                <button class="preset-btn" onclick="setCurtain(50)">微光</button>
                 <button class="preset-btn" onclick="setCurtain(100)">全開</button>
             </div>
         </div>
     </div>
 
-    <script src="js/curtains.js"></script>
-    
+    <script>
+        const slider = document.getElementById('curtainSlider');
+        const left = document.getElementById('curtainLeft');
+        const right = document.getElementById('curtainRight');
+        const numText = document.getElementById('percentNum');
+        const statusText = document.getElementById('statusText');
+
+        function updateCurtains(value) {
+            const widthPercentage = 50 - (value / 2);
+            left.style.width = widthPercentage + "%";
+            right.style.width = widthPercentage + "%";
+            slider.value = value;
+            numText.innerText = value + "%";
+            
+            if (value == 0) statusText.innerText = "窗簾狀態：已完全關閉";
+            else if (value == 100) statusText.innerText = "窗簾狀態：已完全開啟";
+            else if (value > 80) statusText.innerText = "窗簾狀態：採光良好";
+            else statusText.innerText = "窗簾狀態：部分開啟";
+        }
+
+        function setCurtain(value) {
+            updateCurtains(value);
+        }
+
+        updateCurtains(0);
+    </script>
 </body>
 </html>

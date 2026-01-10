@@ -5,39 +5,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CloudStay | 智慧房控</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/style.css">
-
     <style>
-        body {
-            /* 換回一張比較溫馨的房間背景 */
-            background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
-            background-size: cover;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, '微軟正黑體', sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* 毛玻璃卡片容器 (覆蓋 style.css 的預設 container) */
+        body {
+            /* 維持原本的溫馨房間背景 */
+            background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
         .dashboard {
             width: 100%;
-            max-width: 380px;
+            max-width: 380px; /* 稍微加寬一點點讓按鈕更舒適 */
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
             border-radius: 30px;
             padding: 30px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.2);
-            text-align: center;
+            /* 讓內容如果太多可以滾動，但隱藏卷軸 */
+            max-height: 90vh; 
+            overflow-y: auto;
+        }
+
+        /* 隱藏卷軸但保持功能 */
+        .dashboard::-webkit-scrollbar {
+            display: none;
+        }
+
+        header {
+            margin-bottom: 25px;
+            text-align: center; /* 標題置中 */
         }
 
         h1 {
             color: #2c3e50;
             font-size: 1.8rem;
             margin-bottom: 5px;
-            font-weight: bold;
         }
 
         p.subtitle {
             color: #7f8c8d;
             font-size: 0.9rem;
-            margin-bottom: 20px;
         }
 
         /* 功能網格 (2x2 排列) */
@@ -60,47 +79,72 @@
             text-decoration: none;
             color: #333;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            height: 120px; /* 稍微調矮一點，不然 6 格會太長 */
+            transition: transform 0.2s, box-shadow 0.2s;
+            height: 130px; /* 稍微調小高度以便塞入更多按鈕 */
         }
 
         .menu-btn:active {
             transform: scale(0.95);
         }
+        
+        .menu-btn:hover {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        /* 讓最後一個按鈕(退房)橫跨兩欄 */
+        .menu-btn:last-child {
+            grid-column: span 2;
+            flex-direction: row; /* 變成橫向排列 */
+            height: 80px; /* 高度變矮一點 */
+            background: #2c3e50; /* 變成深色背景 */
+            color: white;
+        }
+
+        .menu-btn:last-child .icon-box {
+            margin-bottom: 0;
+            margin-right: 15px;
+            background: rgba(255,255,255,0.2); /* 半透明背景 */
+            color: white;
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+        }
 
         .icon-box {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-            width: 50px;
-            height: 50px;
+            font-size: 2rem;
+            margin-bottom: 15px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        /* 不同功能的顏色配置 */
+        /* 原有配色 */
         .lock-style { background: #ffeaa7; color: #fdcb6e; }
         .light-style { background: #fab1a0; color: #e17055; }
         .ac-style { background: #74b9ff; color: white; }
-        .curtain-style { background: #a29bfe; color: white; } /* 新增：紫色給窗簾 */
-        .camera-style { background: #636e72; color: white; } /* 新增：灰色給監控 */
-        .checkout-style { background: #2c3e50; color: white; }
+        
+        /* 新增配色 */
+        .curtain-style { background: #a29bfe; color: #6c5ce7; } /* 紫色系 */
+        .camera-style { background: #55efc4; color: #00b894; } /* 青綠色系 */
+        .service-style { background: #ff9ff3; color: #ef5777; } /* 粉色系 */
 
         .btn-label {
             font-weight: bold;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
 
-        /* 底部資訊 */
         .footer-info {
             text-align: center;
             font-size: 0.8rem;
             color: #999;
-            margin-top: 20px;
+            margin-top: 10px;
             border-top: 1px solid rgba(0,0,0,0.1);
             padding-top: 15px;
         }
+
     </style>
 </head>
 <body>
@@ -136,7 +180,7 @@
 
             <a href="curtains.html" class="menu-btn">
                 <div class="icon-box curtain-style">
-                    <i class="fa-solid fa-person-booth"></i>
+                    <i class="fa-solid fa-table-columns"></i>
                 </div>
                 <span class="btn-label">智慧窗簾</span>
             </a>
@@ -145,14 +189,21 @@
                 <div class="icon-box camera-style">
                     <i class="fa-solid fa-video"></i>
                 </div>
-                <span class="btn-label">門口監控</span>
+                <span class="btn-label">訪客監控</span>
+            </a>
+
+            <a href="service.html" class="menu-btn">
+                <div class="icon-box service-style">
+                    <i class="fa-solid fa-bell-concierge"></i>
+                </div>
+                <span class="btn-label">客房服務</span>
             </a>
 
             <a href="checkout.html" class="menu-btn">
-                <div class="icon-box checkout-style">
+                <div class="icon-box">
                     <i class="fa-solid fa-right-from-bracket"></i>
                 </div>
-                <span class="btn-label">辦理退房</span>
+                <span class="btn-label">辦理退房 Checkout</span>
             </a>
 
         </div>
@@ -162,5 +213,5 @@
         </div>
     </div>
 
-    </body>
+</body>
 </html>

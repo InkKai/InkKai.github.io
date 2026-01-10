@@ -3,122 +3,334 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>智慧燈光控制 | CloudStay</title>
+    <title>智慧燈光控制</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/style.css">
-
     <style>
-        /* 調整容器對齊方式 (因為這頁內容比較長) */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '微軟正黑體', sans-serif;
+            user-select: none;
+        }
+
         body {
-            align-items: flex-start;
-            padding-top: 50px;
-        }
-
-        /* 燈光控制網格 */
-        .lights-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* 兩欄 */
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        /* 單個燈光卡片 */
-        .light-card {
-            background: #f8f9fa;
-            border-radius: 20px;
+            /* 修改 1: 換上跟首頁一樣的背景圖 */
+            background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            
+            min-height: 100vh;
             padding: 20px;
             display: flex;
-            flex-direction: column;
             justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid transparent;
-            height: 140px;
+            align-items: flex-start; /* 靠上對齊 */
         }
 
-        /* 關燈狀態 (預設) */
-        .light-card .icon-circle {
-            width: 50px;
-            height: 50px;
-            background: #e0e0e0;
-            border-radius: 50%;
+        .container {
+            width: 100%;
+            max-width: 400px;
+            
+            /* 修改 2: 讓背景變成半透明毛玻璃，透出後面的圖 */
+            background: rgba(255, 255, 255, 0.85); 
+            backdrop-filter: blur(20px);
+            
+            border-radius: 30px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2); /* 陰影稍微加深一點 */
+            margin-top: 20px;
+        }
+        
+        /* --- 以下內容完全保持原樣 --- */
+
+        header {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            color: #777;
-            font-size: 1.2rem;
-            margin-bottom: 10px;
-            transition: 0.3s;
+            margin-bottom: 25px;
         }
 
-        .light-card .status {
-            font-size: 0.8rem;
-            color: #999;
+        h2 {
+            color: #333;
+            font-size: 1.5rem;
         }
 
-        /* 開燈狀態 (active) */
-        .light-card.on {
-            background: #fff;
-            border-color: #f1c40f; /* 金黃邊框 */
-            box-shadow: 0 10px 20px rgba(241, 196, 15, 0.2);
-        }
-
-        .light-card.on .icon-circle {
-            background: #f1c40f;
-            color: white;
-            box-shadow: 0 0 15px #f1c40f;
-        }
-
-        .light-card.on .status {
-            color: #f1c40f;
-            font-weight: bold;
-        }
-
-        /* 全域控制按鈕區 */
+        /* 總開關按鈕區域 */
         .master-controls {
             display: flex;
             gap: 10px;
-            justify-content: center;
+            margin-bottom: 20px;
         }
 
         .master-btn {
             flex: 1;
             padding: 12px;
             border: none;
-            border-radius: 10px;
-            cursor: pointer;
+            border-radius: 12px;
             font-weight: bold;
-            transition: 0.2s;
+            cursor: pointer;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .btn-on { background: #ffeaa7; color: #d35400; }
-        .btn-off { background: #dfe6e9; color: #636e72; }
+        .btn-all-on {
+            background-color: #fff4e6;
+            color: #f39c12;
+        }
+        .btn-all-on:active { background-color: #ffe0b2; }
 
-        .btn-on:active, .btn-off:active { transform: scale(0.95); }
+        .btn-all-off {
+            background-color: #f1f2f6; /* 這裡稍微調整透明度讓它融合背景 */
+            background-color: rgba(241, 242, 246, 0.8);
+            color: #7f8c8d;
+        }
+        .btn-all-off:active { background-color: #e2e6ea; }
+
+        /* 燈光列表網格 */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* 兩欄 */
+            gap: 15px;
+        }
+
+        /* 單個燈光卡片 */
+        .light-card {
+            background: #f8f9fa; /* 稍微透明一點 */
+            background: rgba(248, 249, 250, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: space-between;
+            height: 140px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        /* 圖示 */
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            color: #aaa;
+            transition: 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .label {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #555;
+            margin-top: 10px;
+            z-index: 2;
+        }
+
+        .status {
+            font-size: 0.8rem;
+            color: #999;
+            z-index: 2;
+        }
+
+        /* 開燈狀態樣式 (Active) */
+        .light-card.on {
+            background: linear-gradient(135deg, #ff9966 0%, #ff5e62 100%);
+            box-shadow: 0 10px 20px rgba(255, 94, 98, 0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 針對不同燈光做一點顏色變化 */
+        .light-card.on[data-type="main"] {
+            background: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+        }
+        
+        /* 閱讀燈偏冷光 */
+        .light-card.on[data-type="reading"] {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .light-card.on .icon-box {
+            background: rgba(255,255,255,0.3);
+            color: white;
+        }
+
+        .light-card.on .label, 
+        .light-card.on .status {
+            color: white;
+        }
+
+        /* 開關切換動畫按鈕 */
+        .toggle-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 22px;
+            background: #ddd;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .light-card.on .toggle-switch {
+            background: rgba(255,255,255,0.5);
+        }
+        
+        .light-card.on .toggle-switch::after {
+            transform: translateX(18px);
+        }
+
+        /* 為了方便操作，加一個返回按鈕 */
+        .back-link {
+            position: absolute;
+            top: 20px;
+            left: -50px; /* 在寬螢幕時顯示在左側 */
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        /* 手機版返回按鈕調整 */
+        @media (max-width: 600px) {
+            .back-link {
+                left: 10px;
+                top: 10px;
+                position: fixed;
+                z-index: 100;
+            }
+        }
 
     </style>
 </head>
 <body>
 
-    <a href="index.html" class="back-btn">
-        <i class="fa-solid fa-chevron-left"></i>
-    </a>
+    <a href="index.html" class="back-link"><i class="fa-solid fa-chevron-left"></i></a>
 
     <div class="container">
-        <h2>情境燈光</h2>
-        
-        <div class="lights-grid" id="lightsGrid">
-            </div>
+        <header>
+            <h2>燈光控制</h2>
+            <i class="fa-solid fa-sliders" style="color: #666;"></i>
+        </header>
 
         <div class="master-controls">
-            <button class="master-btn btn-on" onclick="toggleAll(true)">全開</button>
-            <button class="master-btn btn-off" onclick="toggleAll(false)">全關</button>
+            <button class="master-btn btn-all-on" onclick="toggleAll(true)">
+                <i class="fa-solid fa-bolt"></i> 全開
+            </button>
+            <button class="master-btn btn-all-off" onclick="toggleAll(false)">
+                <i class="fa-regular fa-lightbulb"></i> 全關
+            </button>
         </div>
+
+        <div class="grid" id="lightGrid">
+            </div>
     </div>
 
-    <script src="js/lights.js"></script>
-    
+    <script>
+        // 定義所有燈光資料 (完全沒動)
+        const lightsData = [
+            { id: 'main', name: '主燈', icon: 'fa-lightbulb', type: 'main' },
+            { id: 'entrance', name: '門口燈', icon: 'fa-door-open', type: 'normal' },
+            { id: 'tea', name: '茶桌燈', icon: 'fa-mug-hot', type: 'normal' },
+            { id: 'bed', name: '床頭燈', icon: 'fa-bed', type: 'normal' },
+            { id: 'night', name: '小夜燈', icon: 'fa-moon', type: 'normal' },
+            { id: 'desk', name: '檯燈', icon: 'fa-pen-nib', type: 'normal' },
+            { id: 'reading', name: '閱讀燈', icon: 'fa-book-open', type: 'reading' }
+        ];
+
+        const grid = document.getElementById('lightGrid');
+
+        // 產生 HTML
+        function renderLights() {
+            grid.innerHTML = '';
+            lightsData.forEach(light => {
+                // 建立卡片元素
+                const card = document.createElement('div');
+                card.className = 'light-card';
+                card.id = `card-${light.id}`;
+                card.setAttribute('data-type', light.type);
+                card.onclick = () => toggleLight(light.id);
+
+                card.innerHTML = `
+                    <div class="icon-box">
+                        <i class="fa-solid ${light.icon}"></i>
+                    </div>
+                    <div class="toggle-switch"></div>
+                    <div>
+                        <div class="label">${light.name}</div>
+                        <div class="status" id="status-${light.id}">已關閉</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // 單燈切換功能
+        function toggleLight(id) {
+            const card = document.getElementById(`card-${id}`);
+            const statusText = document.getElementById(`status-${id}`);
+            
+            // 切換 class
+            card.classList.toggle('on');
+
+            // 更新文字
+            if (card.classList.contains('on')) {
+                statusText.innerText = "已開啟";
+            } else {
+                statusText.innerText = "已關閉";
+            }
+        }
+
+        // 全開 / 全關 功能
+        function toggleAll(turnOn) {
+            lightsData.forEach(light => {
+                const card = document.getElementById(`card-${light.id}`);
+                const statusText = document.getElementById(`status-${light.id}`);
+                
+                if (turnOn) {
+                    if (!card.classList.contains('on')) {
+                        card.classList.add('on');
+                        statusText.innerText = "已開啟";
+                    }
+                } else {
+                    card.classList.remove('on');
+                    statusText.innerText = "已關閉";
+                }
+            });
+        }
+
+        // 初始化畫面
+        renderLights();
+
+    </script>
 </body>
 </html>

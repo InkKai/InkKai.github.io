@@ -5,61 +5,133 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>門口監控 | CloudStay</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <link rel="stylesheet" href="css/style.css">
-
     <style>
-        /* 覆蓋掉原本 body 的淺灰背景，改成黑色 */
-        body {
-            background-color: #000; 
-            color: white;
-            flex-direction: column; /* 這裡需要直排 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '微軟正黑體', sans-serif;
         }
+
+        body {
+            /* 1. 換上跟首頁一樣的背景圖 */
+            background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative; /* 為了放遮罩 */
+        }
+
+        /* 2. 加上一層深色毛玻璃遮罩，讓監控畫面更清楚 */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75); /* 75% 黑色半透明 */
+            backdrop-filter: blur(8px); /* 背景模糊 */
+            z-index: -1; /* 放在最底層 */
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.9);
+            text-decoration: none;
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            backdrop-filter: blur(5px);
+            transition: 0.3s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .back-btn:hover { background: rgba(255,255,255,0.3); }
 
         /* 模擬攝影機畫面 */
-        .camera-feed {
+        .camera-wrapper {
             position: relative;
-            width: 100%;
+            width: 90%; /* 手機版寬度 */
             max-width: 500px;
-            aspect-ratio: 16/9;
-            background: url('https://images.unsplash.com/photo-1596434464303-a261a86a0149?q=80&w=2070&auto=format&fit=crop'); /* 飯店走廊圖 */
-            background-size: cover;
-            background-position: center;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
             margin-bottom: 30px;
+            border-radius: 15px;
+            overflow: hidden;
+            /* 加強陰影，讓畫面浮起來 */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
-        /* 加上一層濾鏡讓它像監視器 (稍微偏綠+雜訊感) */
+        .camera-feed {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: url('https://images.unsplash.com/photo-1596434464303-a261a86a0149?q=80&w=2070&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
         .camera-filter {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 50, 0, 0.1);
-            box-shadow: inset 0 0 50px rgba(0,0,0,0.8); /* 四角暗角 */
+            background: rgba(0, 20, 0, 0.1);
+            box-shadow: inset 0 0 80px rgba(0,0,0,0.9);
             pointer-events: none;
+            z-index: 2;
         }
 
-        /* 錄影中標示 */
+        /* 掃描線 */
+        .scanline {
+            width: 100%;
+            height: 100px;
+            z-index: 3;
+            background: linear-gradient(0deg, rgba(0,0,0,0) 0%, rgba(255, 255, 255, 0.1) 50%, rgba(0,0,0,0) 100%);
+            opacity: 0.1;
+            position: absolute;
+            bottom: 100%;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+        }
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: -100%; }
+        }
+
+        /* REC 指示燈 */
         .rec-indicator {
             position: absolute;
             top: 20px;
-            right: 20px;
+            right: 25px;
             display: flex;
             align-items: center;
-            gap: 5px;
-            font-size: 0.8rem;
+            gap: 8px;
+            font-size: 0.9rem;
             font-weight: bold;
-            color: red;
-            text-shadow: 0 1px 2px black;
+            color: #ff4757;
+            text-shadow: 0 0 5px rgba(0,0,0,0.8);
+            z-index: 5;
+            background: rgba(0,0,0,0.6);
+            padding: 5px 12px;
+            border-radius: 20px; /* 圓角更好看 */
+            border: 1px solid rgba(255, 71, 87, 0.3);
         }
 
         .dot {
             width: 10px;
             height: 10px;
-            background: red;
+            background: #ff4757;
             border-radius: 50%;
-            animation: blink 1s infinite;
+            animation: blink 1.5s infinite;
+            box-shadow: 0 0 10px #ff4757;
         }
 
         /* 時間戳記 */
@@ -67,59 +139,176 @@
             position: absolute;
             bottom: 20px;
             left: 20px;
-            font-family: 'Courier New', monospace; /* 等寬字體像監視器 */
+            font-family: 'Consolas', 'Monaco', monospace;
             font-size: 1rem;
-            text-shadow: 0 1px 2px black;
+            color: rgba(255,255,255,0.9);
+            z-index: 5;
+            background: rgba(0,0,0,0.6);
+            padding: 5px 10px;
+            border-radius: 4px;
         }
 
         /* 下方操作按鈕區 */
-        .controls {
+        .controls-container {
+            /* 這裡稍微調亮一點，跟背景區隔 */
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            padding: 20px 40px;
+            border-radius: 40px;
+            border: 1px solid rgba(255,255,255,0.2);
             display: flex;
-            gap: 20px;
-            justify-content: center;
+            gap: 30px;
             align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
 
-        /* 按鈕顏色微調 */
-        .btn-mic { background: #34495e; color: white; }
-        .btn-unlock { background: #27ae60; width: 80px; height: 80px; font-size: 2rem; color: white; }
-        .btn-alert { background: #c0392b; color: white; }
+        .btn-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
 
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0; } 100% { opacity: 1; } }
+        .btn-round {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.6rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-round:active { transform: scale(0.9); }
+
+        .btn-label {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+
+        .btn-mic { background: linear-gradient(145deg, #34495e, #2c3e50); }
+        .btn-mic.active { background: #2ecc71; box-shadow: 0 0 20px #2ecc71; animation: pulse 1s infinite; }
+        
+        .btn-unlock { background: linear-gradient(145deg, #e67e22, #d35400); width: 80px; height: 80px; font-size: 2rem; }
+        .btn-unlock:active { background: #d35400; }
+        
+        .btn-alert { background: linear-gradient(145deg, #c0392b, #e74c3c); }
+        .btn-alert:active { background: #c0392b; }
+
+        .status-message {
+            margin-top: 20px;
+            height: 20px;
+            color: #2ecc71;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            font-weight: bold;
+        }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
     </style>
 </head>
-<body class="dark-mode">
+<body>
 
     <a href="index.html" class="back-btn"><i class="fa-solid fa-chevron-left"></i></a>
 
-    <div class="camera-feed">
-        <div class="camera-filter"></div>
+    <div class="camera-wrapper">
+        <div class="camera-feed">
+            <div class="camera-filter"></div>
+            <div class="scanline"></div>
+            
+            <div class="rec-indicator">
+                <div class="dot"></div> REC
+            </div>
+
+            <div class="timestamp" id="timeDisplay">2025-12-20 12:00:00</div>
+        </div>
+    </div>
+
+    <div class="controls-container">
         
-        <div class="rec-indicator">
-            <div class="dot"></div> REC
+        <div class="btn-wrapper">
+            <button class="btn-round btn-mic" id="micBtn" onmousedown="startTalk()" onmouseup="endTalk()" ontouchstart="startTalk()" ontouchend="endTalk()">
+                <i class="fa-solid fa-microphone"></i>
+            </button>
+            <span class="btn-label" id="micLabel">按住通話</span>
+        </div>
+        
+        <div class="btn-wrapper">
+            <button class="btn-round btn-unlock" onclick="quickUnlock()">
+                <i class="fa-solid fa-lock-open"></i>
+            </button>
+            <span class="btn-label" style="color: #ff9f43;">遠端開門</span>
+        </div>
+        
+        <div class="btn-wrapper">
+            <button class="btn-round btn-alert" onclick="triggerAlert()">
+                <i class="fa-solid fa-bell"></i>
+            </button>
+            <span class="btn-label">通報警衛</span>
         </div>
 
-        <div class="timestamp" id="timeDisplay">2025-12-20 12:00:00</div>
     </div>
 
-    <div class="controls">
-        <button class="btn-round btn-mic" onclick="toggleMic()">
-            <i class="fa-solid fa-microphone"></i>
-            <span>通話</span>
-        </button>
-        
-        <button class="btn-round btn-unlock" onclick="quickUnlock()">
-            <i class="fa-solid fa-lock-open"></i>
-        </button>
-        
-        <button class="btn-round btn-alert" onclick="triggerAlarm()">
-            <i class="fa-solid fa-bell"></i>
-            <span>警報</span>
-        </button>
-    </div>
+    <div class="status-message" id="msgBox">指令已發送</div>
 
-    <script src="js/camera.js"></script>
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const str = now.getFullYear() + "-" + 
+                        String(now.getMonth()+1).padStart(2, '0') + "-" + 
+                        String(now.getDate()).padStart(2, '0') + " " + 
+                        String(now.getHours()).padStart(2, '0') + ":" + 
+                        String(now.getMinutes()).padStart(2, '0') + ":" + 
+                        String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('timeDisplay').innerText = str;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
 
+        const micBtn = document.getElementById('micBtn');
+        const micLabel = document.getElementById('micLabel');
+        
+        function startTalk() {
+            micBtn.classList.add('active');
+            micLabel.innerText = "通話中...";
+            micLabel.style.color = "#2ecc71";
+        }
+
+        function endTalk() {
+            micBtn.classList.remove('active');
+            micLabel.innerText = "按住通話";
+            micLabel.style.color = "rgba(255,255,255,0.8)";
+        }
+
+        function showMsg(text, color) {
+            const msg = document.getElementById('msgBox');
+            msg.innerText = text;
+            msg.style.color = color;
+            msg.style.opacity = 1;
+            setTimeout(() => { msg.style.opacity = 0; }, 2000);
+        }
+
+        function quickUnlock() {
+            if(confirm("確定要遠端開啟房門嗎？")) {
+                showMsg("門鎖已開啟 (Quick Access)", "#2ecc71");
+            }
+        }
+
+        function triggerAlert() {
+            showMsg("已通報警衛室，請稍候", "#ff4757");
+        }
+    </script>
 </body>
 </html>
