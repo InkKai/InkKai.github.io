@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ops Note | 50題全端技術問答</title>
+    <style>
+      /* --- CSS Config --- */
+      :root {
+        --bg-color: #0d1117; /* GitHub Dark 背景 */
+        --card-bg: #161b22; /* 卡片背景 */
+        --text-main: #c9d1d9; /* 主要文字 */
+        --text-accent: #58a6ff; /* 藍色強調 */
+        --success: #2ea043; /* 成功綠 */
+        --border: #30363d; /* 邊框 */
+        --code-bg: #000; /* 程式碼背景 */
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Consolas", "Monaco", "Microsoft JhengHei", monospace;
+        background-color: var(--bg-color);
+        color: var(--text-main);
+        margin: 0;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      /* Header */
+      header {
+        text-align: center;
+        margin-bottom: 40px;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 20px;
+      }
+      h1 {
+        color: var(--success);
+      }
+      .stats {
+        font-size: 0.9rem;
+        color: #8b949e;
+        margin-top: 10px;
+      }
+
+      /* Search */
+      .search-box {
+        position: sticky;
+        top: 10px;
+        z-index: 100;
+        margin-bottom: 20px;
+      }
+      #search {
+        width: 100%;
+        padding: 12px;
+        background: var(--bg-color);
+        border: 2px solid var(--border);
+        color: var(--text-main);
+        border-radius: 6px;
+        font-family: inherit;
+        font-size: 1rem;
+      }
+      #search:focus {
+        border-color: var(--text-accent);
+        outline: none;
+      }
+
+      /* Categories */
+      .category-title {
+        color: #8b949e;
+        margin: 30px 0 10px 0;
+        border-bottom: 1px dashed var(--border);
+        padding-bottom: 5px;
+        font-size: 1.2em;
+        font-weight: bold;
+      }
+
+      /* Q&A Items */
+      .faq-item {
+        background: var(--card-bg);
+        margin-bottom: 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      /* 自動編號 CSS Counter */
+      body {
+        counter-reset: question-count;
+      }
+      .question {
+        padding: 15px;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: bold;
+        color: var(--text-accent);
+        user-select: none;
+      }
+      .question::before {
+        counter-increment: question-count;
+        content: "Q" counter(question-count) ". ";
+        color: var(--success);
+        margin-right: 10px;
+      }
+
+      .answer {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-out;
+        background-color: rgba(0, 0, 0, 0.2);
+      }
+      .answer-content {
+        padding: 15px;
+        border-top: 1px solid var(--border);
+        color: #ccc;
+        font-size: 0.95rem;
+      }
+
+      /* Highlight & Code */
+      code {
+        background: #333;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: "Consolas", monospace;
+        color: #ff7b72;
+      }
+      .hl {
+        color: var(--success);
+        font-weight: bold;
+      }
+
+      /* RWD */
+      @media (max-width: 600px) {
+        .question {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>root@Final_Project:~$ cat ./50_QA.log</h1>
+        <div class="stats">
+          Status: Active | Loaded: 50 Questions | Mode: Full Stack
+        </div>
+      </header>
+
+      <div class="search-box">
+        <input
+          type="text"
+          id="search"
+          placeholder="grep '關鍵字' (e.g. Git, Flex, DOM)..."
+        />
+      </div>
+
+      <div id="faq-list">
+        <div class="category-title">Phase 1: HTML 架構 (Structure)</div>
+
+        <div class="faq-item">
+          <div class="question">HTML 的本質是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              HTML 就像是 Switch 的
+              <span class="hl">Running Config</span
+              >。瀏覽器讀取它來決定畫面的結構。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Live Server 的原理？</div>
+          <div class="answer">
+            <div class="answer-content">
+              在 Local (127.0.0.1) 的 Ephemeral Port (如 5500) 起一個 Web
+              Service，並用 WebSocket 監聽檔案變更。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">&lt;head&gt; 標籤的作用？</div>
+          <div class="answer">
+            <div class="answer-content">
+              類似 <span class="hl">Packet Header</span>。存放
+              Metadata（編碼、標題、CSS 連結），使用者看不到，但對解析至關重要。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">什麼是語意化標籤 (Semantic Tags)？</div>
+          <div class="answer">
+            <div class="answer-content">
+              如 <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>。就像 Linux
+              的標準目錄結構 (/bin, /etc)，讓機器知道區塊的用途，而不是全部丟在
+              /tmp (<code>&lt;div&gt;</code>)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">相對路徑 ./ 和 ../ 的意思？</div>
+          <div class="answer">
+            <div class="answer-content">
+              與 Linux 檔案系統完全一致。<code>./</code> 是當前目錄，<code
+                >../</code
+              >
+              是上一層目錄。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">顯示程式碼要用什麼標籤？</div>
+          <div class="answer">
+            <div class="answer-content">
+              使用 <code>&lt;pre&gt;</code> (保留格式) 包住
+              <code>&lt;code&gt;</code> (標示代碼)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Viewport Meta Tag 的作用？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>width=device-width</code
+              >。告訴瀏覽器把視窗寬度設為硬體寬度，是 RWD 手機版排版的基礎。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">HTML 註解怎麼寫？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>&lt;!-- 註解內容 --&gt;</code>，瀏覽器會忽略它，就像 Shell
+              Script 的 <code>#</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">引入 CSS 的語法？</div>
+          <div class="answer">
+            <div class="answer-content">
+              在 Head 裡使用
+              <code>&lt;link rel="stylesheet" href="style.css"&gt;</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">引入 JS 的語法？</div>
+          <div class="answer">
+            <div class="answer-content">
+              通常在 Body 結束前使用
+              <code>&lt;script src="script.js"&gt;&lt;/script&gt;</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="category-title">Phase 2: CSS 排版 (Styling)</div>
+
+        <div class="faq-item">
+          <div class="question">CSS Grid 的用途？</div>
+          <div class="answer">
+            <div class="answer-content">
+              精準的版面切割，類似硬碟分割 (Partitioning)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">CSS Flexbox 的用途？</div>
+          <div class="answer">
+            <div class="answer-content">
+              一維的彈性排列，類似 LVM，內容多了自動撐開，少了自動縮小。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Position: Sticky 是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              將元素「釘」在視窗上，類似將視窗設為 "Always on
+              Top"，捲動時會跟著跑。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">RWD Media Query 寫法？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>@media (max-width: 768px) { ... }</code>。類似 Shell 的
+              <code>if [ width -lt 768 ]; then ...</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">如何設定等寬字體？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>font-family: 'Consolas', monospace;</code
+              >。這對顯示程式碼對齊很重要。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Hover 效果是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>a:hover</code>。當滑鼠游標懸停時觸發的樣式改變 (Event
+              Trigger)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Box Model (盒模型) 包含哪些？</div>
+          <div class="answer">
+            <div class="answer-content">
+              Content(內容) -> Padding(內距) -> Border(邊框) -> Margin(外距)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">如何隱藏一個元素？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>display: none;</code>。元素會完全從 Render Tree
+              消失，不佔空間。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Zebra Striping (表格條紋) 怎麼做？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>tr:nth-child(even)</code>。選取偶數列變色，像
+              <code>awk 'NR%2==0'</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">vh 和 vw 單位是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              Viewport Height/Width。<code>100vh</code> 等於螢幕可視範圍的 100%
+              高度。
+            </div>
+          </div>
+        </div>
+
+        <div class="category-title">Phase 3: JS 邏輯 (Scripting)</div>
+
+        <div class="faq-item">
+          <div class="question">Let vs Const 差別？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>const</code> 是唯讀變數 (Immutable)，<code>let</code>
+              是一般變數。系統工程師應優先用 const 避免改錯參數。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">DOM 是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              Document Object Model。瀏覽器把 HTML 解析成的樹狀結構，JS 透過操作
+              DOM 來改變畫面。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">addEventListener 是做什麼的？</div>
+          <div class="answer">
+            <div class="answer-content">
+              事件監聽器。類似 Daemon 監聽 Signal (如 Click, Scroll, Keydown)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">LocalStorage 是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              瀏覽器端的簡易資料庫。資料會寫入硬碟，重開機(重整網頁)後資料還在。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">如何實現「一鍵複製」？</div>
+          <div class="answer">
+            <div class="answer-content">
+              使用 <code>navigator.clipboard.writeText()</code> API。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Subnet Mask 計算公式？</div>
+          <div class="answer">
+            <div class="answer-content">
+              可用 IP = 2^(32 - CIDR) - 2。JS 用
+              <code>Math.pow(2, n)</code> 計算。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">如何用 JS 切換 CSS Class？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>element.classList.toggle('classname')</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">搜尋過濾的邏輯？</div>
+          <div class="answer">
+            <div class="answer-content">
+              監聽 Input -> 取得 Value -> 迴圈比對文字 -> 符合的
+              <code>display: block</code>，不符的 <code>display: none</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">為什麼外部連結要加 noopener？</div>
+          <div class="answer">
+            <div class="answer-content">
+              安全性考量。防止新開的視窗透過 JS (`window.opener`) 控制原視窗。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Console.log 的用途？</div>
+          <div class="answer">
+            <div class="answer-content">
+              除錯用。就像在 Shell Script 裡
+              <code>echo $VAR</code> 查看變數狀態。
+            </div>
+          </div>
+        </div>
+
+        <div class="category-title">Phase 4: 網管知識 (Domain Knowledge)</div>
+
+        <div class="faq-item">
+          <div class="question">chmod 755 代表什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              Owner: rwx (7), Group: rx (5), Others: rx (5)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">RAID 0, 1, 5 簡述？</div>
+          <div class="answer">
+            <div class="answer-content">
+              0: 效能高無備份; 1: 鏡像備份容量半減; 5: 同位檢查碼，容許壞一顆。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">HTTP 200 vs 404 vs 500？</div>
+          <div class="answer">
+            <div class="answer-content">
+              200: 成功; 404: 找不到檔案 (Client錯); 500: 程式崩潰 (Server錯)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">DNS A Record 是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              將 Domain Name 對應到 IPv4 Address 的紀錄。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">DNS CNAME 是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              別名 (Alias)，將一個 Domain 指向另一個 Domain。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Ping 指令是用什麼協定？</div>
+          <div class="answer">
+            <div class="answer-content">
+              ICMP (Internet Control Message Protocol)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Traceroute 的作用？</div>
+          <div class="answer">
+            <div class="answer-content">
+              追蹤封包經過的每一個 Hop (Router)，用來判斷網路斷在哪個節點。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">img loading="lazy" 是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              延遲載入。瀏覽器只載入捲軸視窗內的圖片，節省頻寬與流量。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">YouTube iframe 怎麼做 RWD？</div>
+          <div class="answer">
+            <div class="answer-content">
+              外層容器設 <code>padding-bottom: 56.25%</code> (16:9)，iframe
+              設絕對定位撐滿。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Localhost 的 IP 是？</div>
+          <div class="answer">
+            <div class="answer-content">127.0.0.1 (Loopback Interface)。</div>
+          </div>
+        </div>
+
+        <div class="category-title">Phase 5: 部署上線 (DevOps)</div>
+
+        <div class="faq-item">
+          <div class="question">git init 會產生什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              <code>.git</code> 隱藏目錄。它是版本控制的資料庫。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">.gitignore 的作用？</div>
+          <div class="answer">
+            <div class="answer-content">
+              Git 的黑名單 (Deny List)。排除系統檔 (.DS_Store) 或敏感資料。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">git remote add origin 是做什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              設定遠端倉庫地址 (Upstream Server)，讓本地知道要推送到哪裡。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">git push -u 是什麼意思？</div>
+          <div class="answer">
+            <div class="answer-content">
+              推送並設定 Upstream，下次只要打
+              <code>git push</code> 就會預設推到這裡。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">GitHub Pages 是什麼？</div>
+          <div class="answer">
+            <div class="answer-content">
+              GitHub 提供的靜態網頁託管服務 (Static Hosting)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">GitHub 現在還支援密碼登入嗎？</div>
+          <div class="answer">
+            <div class="answer-content">
+              不支援。必須使用 Personal Access Token (PAT) 或 SSH Key。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">Client-side vs Server-side 差別？</div>
+          <div class="answer">
+            <div class="answer-content">
+              GitHub Pages 是 Client-side (瀏覽器執行 JS)，無法跑 PHP/Python
+              等後端語言。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">綁定 Domain 需要設定什麼 DNS？</div>
+          <div class="answer">
+            <div class="answer-content">
+              CNAME Record。將 <code>www</code> 指向
+              <code>yourname.github.io</code>。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">README.md 是什麼格式？</div>
+          <div class="answer">
+            <div class="answer-content">
+              Markdown。是專案的說明文件 (Man page)。
+            </div>
+          </div>
+        </div>
+
+        <div class="faq-item">
+          <div class="question">什麼是 CI/CD？</div>
+          <div class="answer">
+            <div class="answer-content">
+              持續整合/持續部署。例如用 GitHub Actions 自動檢查 HTML
+              語法並部署。
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style="
+          text-align: center;
+          margin-top: 50px;
+          padding-bottom: 50px;
+          color: #666;
+        "
+      >
+        <p>-- End of File --</p>
+      </div>
+    </div>
+
+    <script>
+      /* --- JS Logic --- */
+
+      // 1. Accordion Toggle
+      const items = document.querySelectorAll(".faq-item");
+      items.forEach((item) => {
+        item.querySelector(".question").addEventListener("click", () => {
+          item.classList.toggle("active");
+          const answer = item.querySelector(".answer");
+          if (item.classList.contains("active")) {
+            answer.style.maxHeight = answer.scrollHeight + "px";
+          } else {
+            answer.style.maxHeight = null;
+          }
+        });
+      });
+
+      // 2. Search Function
+      const searchInput = document.getElementById("search");
+      searchInput.addEventListener("input", (e) => {
+        const term = e.target.value.toLowerCase();
+        items.forEach((item) => {
+          const q = item.querySelector(".question").innerText.toLowerCase();
+          const a = item.querySelector(".answer").innerText.toLowerCase();
+          if (q.includes(term) || a.includes(term)) {
+            item.style.display = "block";
+          } else {
+            item.style.display = "none";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
