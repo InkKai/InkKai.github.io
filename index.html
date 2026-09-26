@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffd6e5">
+  <title>給阿米的小網頁 ♡</title>
+
+  <!-- 傳 LINE 時顯示的預覽標題和說明 -->
+  <meta property="og:title" content="給阿米的小網頁 ♡">
+  <meta property="og:description" content="悠米寫了一個網頁給你，點開慢慢看">
+  <meta property="og:type" content="website">
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💗</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="bubbles" aria-hidden="true"></canvas>
+
+  <main>
+    <!-- 開場 -->
+    <section class="hero">
+      <div class="mochi-wrap"><span class="speech" id="speech" hidden></span><div class="mochi" id="mochi" aria-hidden="true">
+        <svg viewBox="0 0 120 120">
+          <line x1="60" y1="26" x2="60" y2="12" stroke="#ff8fb3" stroke-width="3" stroke-linecap="round"/>
+          <path d="M60 14 C53 9 51 4 55 2.2 C57.4 1.2 59.2 2.4 60 4 C60.8 2.4 62.6 1.2 65 2.2 C69 4 67 9 60 14Z" fill="#ff5c93"/>
+          <ellipse cx="60" cy="70" rx="46" ry="42" fill="#fff" stroke="#ffc2d6" stroke-width="3"/>
+          <ellipse cx="34" cy="80" rx="8" ry="5" fill="#ffb3cb" opacity=".85"/>
+          <ellipse cx="86" cy="80" rx="8" ry="5" fill="#ffb3cb" opacity=".85"/>
+          <g class="eyes">
+            <circle cx="44" cy="66" r="5.5" fill="#5b3b4c"/>
+            <circle cx="76" cy="66" r="5.5" fill="#5b3b4c"/>
+            <circle cx="45.8" cy="64" r="1.8" fill="#fff"/>
+            <circle cx="77.8" cy="64" r="1.8" fill="#fff"/>
+          </g>
+          <path d="M53 78 Q60 85 67 78" stroke="#5b3b4c" stroke-width="3" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div></div>
+      <h1><span id="hero-title" class="cursor"></span></h1>
+      <p class="sub">寫了一個網頁給你，慢慢滑</p>
+
+      <div class="terminal">
+        <div class="term-bar"><span></span><span></span><span></span><em>for-you.sh</em></div>
+        <pre id="term"></pre>
+      </div>
+
+      <a href="#monitor" class="scroll-hint">往下滑</a>
+    </section>
+
+    <!-- 心電圖 -->
+    <section id="monitor" class="block">
+      <h2><span class="tag">monitor.js</span>我的心電圖</h2>
+      <div class="monitor">
+        <div class="mon-top">
+          <span class="lead">Lead II</span>
+          <span class="hr"><i id="beat" class="beat">♥</i>HR <b id="bpm">72</b> bpm</span>
+        </div>
+        <canvas id="ecg"></canvas>
+      </div>
+      <p class="dx" id="dx">判讀：正常竇性心律</p>
+      <button id="think" class="btn soft" type="button">看看想到你的時候</button>
+    </section>
+
+    <!-- 計時 -->
+    <section class="block">
+      <h2><span class="tag">$ uptime</span><span id="timer-label"></span></h2>
+      <div class="timer">
+        <div><b id="t-d">0</b><small>天</small></div>
+        <div><b id="t-h">00</b><small>小時</small></div>
+        <div><b id="t-m">00</b><small>分</small></div>
+        <div><b id="t-s">00</b><small>秒</small></div>
+      </div>
+      <p class="note">系統穩定運行中，偶爾已讀亂回，但沒當機過。</p>
+    </section>
+
+    <!-- 心形方程式 -->
+    <section class="block">
+      <h2><span class="tag">heart.js</span>工程師不太會說話，所以用畫的</h2>
+      <canvas id="heart" width="400" height="360"></canvas>
+      <p class="formula">x = 16 sin³t<br>y = 13 cos t − 5 cos 2t − 2 cos 3t − cos 4t</p>
+    </section>
+
+    <!-- 回憶 -->
+    <section class="block">
+      <h2><span class="tag">$ git log</span>我們的紀錄</h2>
+      <ol id="gitlog" class="gitlog"></ol>
+    </section>
+
+    <!-- 最後的問題 -->
+    <section class="block final">
+      <h2><span class="tag">if (answer === true)</span><span id="question"></span></h2>
+      <div class="btns" id="btns">
+        <button id="yes" class="btn yes" type="button">好啊 ♡</button>
+        <button id="no" class="btn no" type="button">下次好了</button>
+      </div>
+      <p id="answer" class="answer" hidden></p>
+    </section>
+
+    <!-- 隱藏結局：找齊彩蛋才會出現 -->
+    <section class="block secret" id="secret" hidden>
+      <h2><span class="tag">🥚 全部找到了</span>隱藏結局</h2>
+      <p class="secret-text" id="secret-text"></p>
+    </section>
+  </main>
+
+  <footer id="footer">made with ♡ and &lt;code/&gt;</footer>
+
+  <button class="egg-badge" id="egg-badge" type="button" aria-label="彩蛋進度，點一下看提示">🥚 <span id="egg-count">0</span>/<span id="egg-total">8</span></button>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
